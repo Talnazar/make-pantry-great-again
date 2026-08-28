@@ -18,8 +18,6 @@ export default defineNuxtConfig({
         'https://play.google.com/store/apps/details?id=com.hepilo.twa',
       githubLink: process.env.NUXT_PUBLIC_GITHUB_LINK || 'https://github.com/NdoleStudio/hepilo',
       commitHash: process.env.NUXT_PUBLIC_COMMIT_HASH || process.env.CF_PAGES_COMMIT_SHA || '',
-      recaptchaSiteKey:
-        process.env.NUXT_PUBLIC_RECAPTCHA_SITE_KEY || '6Le4-jseAAAAACQavdg0uBHEk6cIPnfQ-jRCYklA',
     },
   },
 
@@ -29,30 +27,15 @@ export default defineNuxtConfig({
     'vuetify-nuxt-module',
     '@pinia/nuxt',
     '@nuxtjs/seo',
-    '@nuxt/content',
     '@nuxtjs/i18n',
     '@vite-pwa/nuxt',
-    '@sentry/nuxt',
     '@nuxt/fonts',
-    '@sentry/nuxt/module',
     '@nuxt/eslint',
   ],
 
   eslint: {
     config: {
       typescript: true,
-    },
-  },
-
-  content: {
-    renderer: {
-      anchorLinks: false,
-    },
-  },
-
-  mdc: {
-    components: {
-      prose: true,
     },
   },
 
@@ -237,15 +220,9 @@ export default defineNuxtConfig({
 
   routeRules: {
     '/': { prerender: true },
-    '/blog/**': { prerender: true },
     '/lists/**': { ssr: false },
     '/manage/**': { ssr: false },
     '/settings': { ssr: false },
-  },
-
-  sentry: {
-    org: 'ndolestudio',
-    project: 'hepilo',
   },
 
   site: {
@@ -278,14 +255,7 @@ export default defineNuxtConfig({
 
   vite: {
     optimizeDeps: {
-      include: [
-        '@mdi/js',
-        '@unhead/schema-org/vue',
-        'firebase/app',
-        'firebase/app-check',
-        'firebase/auth',
-        'firebase/firestore',
-      ],
+      include: ['@mdi/js', '@unhead/schema-org/vue', 'firebase/app', 'firebase/firestore'],
     },
   },
 

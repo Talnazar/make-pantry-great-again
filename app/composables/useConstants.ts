@@ -5,13 +5,7 @@ export const ROUTE_NAMES = {
   MANAGE_ITEMS: 'ManageItems',
   MANAGE_CATEGORIES: 'ManageCategories',
   SETTINGS_INDEX: 'IndexSettings',
-  PRIVACY_POLICY: 'PrivacyPolicy',
-  TERMS_AND_CONDITIONS: 'TermsAndConditions',
-  LOGIN: 'Login',
-  SHOPPING_LIST_DEMO: 'DemoShoppingList',
   HOME: 'Home',
-  BLOG_INDEX: 'BlogIndex',
-  BLOG_SHOW: 'BlogShow',
 } as const
 
 export const NOTIFICATION = {
@@ -21,11 +15,6 @@ export const NOTIFICATION = {
     INFO: 'notification.events.info',
   },
 } as const
-
-// localStorage flag written once Firebase confirms an authenticated user.
-// Used to redirect signed-in users away from the prerendered landing page
-// before it paints, avoiding a flash of the marketing page on app open.
-export const AUTHED_STORAGE_KEY = 'hepilo-authed'
 
 export const useConstants = () => {
   const config = useRuntimeConfig()

@@ -1,13 +1,20 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Match logged in user's state
-    match /states/{userId} {
-      allow delete, read, write: if isOwner(userId);
+    // ⚠️  SECURITY WARNING — OPEN ACCESS ⚠️
+    //
+    // This app has NO authentication. The whole shopping list lives in a single
+    // shared document (states/shared) that ANYONE who knows the Firebase project
+    // ID can read, overwrite, or delete. This is acceptable ONLY for a small,
+    // private, low-stakes list shared between trusted people.
+    //
+    // Do NOT store anything sensitive here.
+    //
+    // To lock this down later, enable Firebase Anonymous Authentication and
+    // change the rule below to `if request.auth != null`, or move back to
+    // per-user documents keyed on `request.auth.uid`.
+    match /states/{stateId} {
+      allow read, write: if true;
     }
-  }
-
-  function isOwner(userId) {
-    return request.auth != null && request.auth.uid == userId;
   }
 }

@@ -2,21 +2,10 @@ import { createPinia, defineStore, setActivePinia } from 'pinia'
 import { computed, ref } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const { setDocMock, persistToLocalStorageMock } = vi.hoisted(() => ({
-  setDocMock: vi.fn(),
+const { syncSharedStateMock, persistToLocalStorageMock } = vi.hoisted(() => ({
+  syncSharedStateMock: vi.fn(),
   persistToLocalStorageMock: vi.fn(),
 }))
-
-vi.mock('firebase/firestore', () => ({
-  getFirestore: vi.fn(() => 'firestore'),
-  doc: vi.fn(() => 'state-doc'),
-  setDoc: setDocMock,
-}))
-
-const authStore = {
-  isLoggedIn: true,
-  user: { id: 'user-1' },
-}
 
 const listStore = {
   stateLoaded: true,
@@ -26,7 +15,7 @@ const listStore = {
 vi.stubGlobal('defineStore', defineStore)
 vi.stubGlobal('ref', ref)
 vi.stubGlobal('computed', computed)
-vi.stubGlobal('useAuthStore', () => authStore)
+vi.stubGlobal('syncSharedState', syncSharedStateMock)
 vi.stubGlobal('useListStore', () => listStore)
 
 const { useUIStore } = await import('../ui')
@@ -34,9 +23,8 @@ const { useUIStore } = await import('../ui')
 describe('UI store nav drawer persistence', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
-    setDocMock.mockReset()
+    syncSharedStateMock.mockReset()
     persistToLocalStorageMock.mockReset()
-    authStore.isLoggedIn = true
     listStore.stateLoaded = true
   })
 
@@ -47,15 +35,15 @@ describe('UI store nav drawer persistence', () => {
 
     expect(store.navDrawerOpen).toBe(true)
     expect(persistToLocalStorageMock).toHaveBeenCalledOnce()
-    expect(setDocMock).not.toHaveBeenCalled()
+    expect(syncSharedStateMock).not.toHaveBeenCalled()
   })
 
-  it('persists desktop drawer changes to Firestore', async () => {
+  it('persists desktop drawer changes to the shared state', async () => {
     const store = useUIStore()
 
     await store.setNavDrawer(true)
 
-    expect(setDocMock).toHaveBeenCalledWith('state-doc', { navDrawerOpen: true }, { merge: true })
+    expect(syncSharedStateMock).toHaveBeenCalledWith({ navDrawerOpen: true })
   })
 
   it('does not persist before list state is loaded', async () => {
@@ -66,17 +54,6 @@ describe('UI store nav drawer persistence', () => {
 
     expect(store.navDrawerOpen).toBe(true)
     expect(persistToLocalStorageMock).toHaveBeenCalledOnce()
-    expect(setDocMock).not.toHaveBeenCalled()
-  })
-
-  it('keeps drawer changes local when the user is logged out', async () => {
-    authStore.isLoggedIn = false
-    const store = useUIStore()
-
-    await store.setNavDrawer(true)
-
-    expect(store.navDrawerOpen).toBe(true)
-    expect(persistToLocalStorageMock).toHaveBeenCalledOnce()
-    expect(setDocMock).not.toHaveBeenCalled()
+    expect(syncSharedStateMock).not.toHaveBeenCalled()
   })
 })

@@ -35,33 +35,10 @@
           class="mr-4"
         />
 
-        <!-- Avatar dropdown menu -->
-        <v-menu location="bottom end">
-          <template #activator="{ props }">
-            <v-btn icon v-bind="props" class="mr-2">
-              <v-avatar size="36" color="primary">
-                <v-img v-if="user?.photoURL" :src="user.photoURL" :alt="user.displayName || ''" />
-                <span v-else class="text-body-large">{{ userInitial }}</span>
-              </v-avatar>
-            </v-btn>
-          </template>
-          <v-list class="pa-0">
-            <v-list-item color="primary" :to="localePath('/settings')">
-              <template #prepend>
-                <v-icon :icon="mdiAccountCog" />
-              </template>
-              <v-list-item-title class="pr-16">{{ t('nav.settings') }}</v-list-item-title>
-            </v-list-item>
-            <v-list-item color="primary" @click="logout">
-              <template #prepend>
-                <v-icon :icon="mdiLogout" />
-              </template>
-              <v-list-item-title class="pr-16">
-                {{ isDemo ? t('nav.exitDemo') : t('nav.logout') }}
-              </v-list-item-title>
-            </v-list-item>
-          </v-list>
-        </v-menu>
+        <!-- Settings -->
+        <v-btn icon class="mr-2" :to="localePath('/settings')">
+          <v-icon :icon="mdiCog" />
+        </v-btn>
       </v-app-bar>
 
       <v-navigation-drawer v-model="navDrawerOpen">
@@ -173,35 +150,21 @@
 import {
   mdiArchiveCogOutline,
   mdiCheck,
-  mdiAccountCog,
-  mdiEmail,
+  mdiCog,
   mdiInformation,
-  mdiLogout,
   mdiPlaylistEdit,
   mdiShapeOutline,
-  mdiTagText,
 } from '@mdi/js'
-import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth'
 
 const { t } = useI18n()
 const localePath = useLocalePath()
-const config = useRuntimeConfig()
-const router = useRouter()
 const uiStore = useUIStore()
 const { mdAndUp, mobile } = useVDisplay()
-const { getFirebaseAuth } = useFirebase()
 const theme = useVTheme()
 
 const isDark = computed(() => theme.global.current.value.dark)
 
-const version = computed(() => (config.public.commitHash as string).slice(0, 7))
-
-const user = ref<FirebaseUser | null>(null)
-const isDemo = computed(() => user.value === null)
-const userInitial = computed(() => user.value?.displayName?.charAt(0) || 'A')
-
 const listStore = useListStore()
-const authStore = useAuthStore()
 const lists = computed(() => listStore.lists)
 
 const navDrawerOpen = computed({
@@ -213,30 +176,12 @@ const navDrawerOpen = computed({
 
 const iconMap = (iconName: string): string => listStore.listIcon(iconName)
 
-async function logout() {
-  try {
-    await authStore.logout()
-    uiStore.addNotification({
-      type: 'info',
-      message: t('auth.logoutSuccess'),
-    })
-    await router.push(localePath('/'))
-  } catch (error) {
-    console.error('Logout failed:', error)
-  }
-}
-
 onMounted(async () => {
   // Restore saved theme
   const savedTheme = localStorage.getItem('hepilo-theme')
   if (savedTheme && (savedTheme === 'light' || savedTheme === 'dark')) {
     theme.change(savedTheme)
   }
-
-  const auth = getFirebaseAuth()
-  onAuthStateChanged(auth, (firebaseUser) => {
-    user.value = firebaseUser
-  })
 
   // Load state so the nav drawer lists are populated
   await listStore.loadState()

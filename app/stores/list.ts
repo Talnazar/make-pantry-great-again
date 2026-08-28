@@ -1,7 +1,6 @@
-import { getFirestore, doc, setDoc, onSnapshot, getDoc } from 'firebase/firestore'
+import { onSnapshot, getDoc } from 'firebase/firestore'
 import type { Unsubscribe, DocumentData } from 'firebase/firestore'
 import { mdiDomain, mdiFormatListCheckbox, mdiWeightLifter } from '@mdi/js'
-import { captureSentryError } from '~/plugins/sentry.client'
 import { DEFAULT_CATEGORY } from './category'
 import defaultCategoriesJson from '~/assets/categories.json'
 import type {
@@ -66,18 +65,9 @@ export const useListStore = defineStore('list', () => {
   // ─── Getters ───
 
   const selectedList = computed((): List => {
-    const authStore = useAuthStore()
     const found = lists.value.find((list: List) => list.id === selectedListId.value)
 
-    if (found === undefined && (!stateLoaded.value || !authStore.isLoggedIn)) {
-      return LIST_DEFAULT
-    }
     if (found === undefined) {
-      captureSentryError(
-        new Error(
-          `[userID:${authStore.user?.id}]cannot fetch selected list with id: ${selectedListId.value}`,
-        ),
-      )
       return LIST_DEFAULT
     }
     return found
@@ -199,14 +189,12 @@ export const useListStore = defineStore('list', () => {
     if (!import.meta.client) return
 
     try {
-      const authStore = useAuthStore()
       const itemStore = useItemStore()
       const categoryStore = useCategoryStore()
       const uiStore = useUIStore()
       const settingsStore = useSettingsStore()
 
       const state = {
-        user: authStore.user,
         lists: lists.value,
         selectedListId: selectedListId.value,
         stateLoaded: stateLoaded.value,
@@ -220,8 +208,6 @@ export const useListStore = defineStore('list', () => {
         title: uiStore.title,
         notification: uiStore.notification,
         navDrawerOpen: uiStore.navDrawerOpen,
-        blogEntries: [],
-        blogStateLoaded: false,
       }
       localStorage.setItem(COLLECTION_STATE, JSON.stringify(state))
     } catch {
@@ -232,25 +218,20 @@ export const useListStore = defineStore('list', () => {
   async function saveState() {
     persistToLocalStorage()
 
-    const authStore = useAuthStore()
-    if (!authStore.isLoggedIn || !authStore.user) return
+    if (!stateLoaded.value) return
 
     const itemStore = useItemStore()
     const categoryStore = useCategoryStore()
     const settingsStore = useSettingsStore()
 
-    await setDoc(
-      doc(getFirestore(), COLLECTION_STATE, authStore.user.id),
-      {
-        lists: lists.value,
-        selectedListId: selectedListId.value,
-        items: itemStore.items,
-        categories: categoryStore.categories,
-        currency: settingsStore.currency,
-        showIntro: settingsStore.showIntro,
-      },
-      { merge: true },
-    )
+    await syncSharedState({
+      lists: lists.value,
+      selectedListId: selectedListId.value,
+      items: itemStore.items,
+      categories: categoryStore.categories,
+      currency: settingsStore.currency,
+      showIntro: settingsStore.showIntro,
+    })
   }
 
   // ─── Hydration helpers ───
@@ -280,14 +261,10 @@ export const useListStore = defineStore('list', () => {
   async function loadState() {
     if (stateLoaded.value) return
 
-    const authStore = useAuthStore()
     const settingsStore = useSettingsStore()
 
-    // Offline or not logged in with valid localStorage data
-    if (
-      (!authStore.isLoggedIn || !window.navigator.onLine) &&
-      localStorage.getItem(COLLECTION_STATE) != null
-    ) {
+    // Offline: fall back to the last state saved in localStorage
+    if (!window.navigator.onLine && localStorage.getItem(COLLECTION_STATE) != null) {
       try {
         const stored = JSON.parse(localStorage.getItem(COLLECTION_STATE) ?? '')
         if (stored.items?.length > 0) {
@@ -295,63 +272,43 @@ export const useListStore = defineStore('list', () => {
           return
         }
       } catch {
-        // Fall through to other loading strategies
+        // Fall through to Firestore loading
       }
     }
 
-    // Not logged in — initialize with defaults and demo data
-    if (!authStore.isLoggedIn) {
-      settingsStore.currency = await getDefaultCurrency()
-      setDefaultItems()
-      sanitizeState()
-      await prepareDemoList()
-      return
-    }
-
-    // Logged in — set up real-time Firestore sync
-    const userId = authStore.user!.id
     const uiStore = useUIStore()
 
-    unsubscribeSnapshot = onSnapshot(
-      doc(getFirestore(), COLLECTION_STATE, userId),
-      async (snapshot) => {
-        if (!snapshot.data()) {
-          console.error(`cannot find snapshot with id [${snapshot.id}]`)
-          return
-        }
-        uiStore.setSaving(true)
-        _hydrateStores(snapshot.data()!)
-        uiStore.setSaving(false)
-      },
-    )
+    // Keep the app in sync with the shared document in real time
+    unsubscribeSnapshot = onSnapshot(sharedStateDoc(), async (snapshot) => {
+      if (!snapshot.data()) return
+      uiStore.setSaving(true)
+      _hydrateStores(snapshot.data()!)
+      uiStore.setSaving(false)
+    })
 
     loadingState.value = true
     persistToLocalStorage()
 
-    const stateSnapshot = await getDoc(doc(getFirestore(), COLLECTION_STATE, userId))
+    const stateSnapshot = await getDoc(sharedStateDoc())
 
     if (!stateSnapshot.exists()) {
+      // First run: seed the shared document with defaults
       settingsStore.currency = await getDefaultCurrency()
       setDefaultItems()
       sanitizeState()
       loadingState.value = false
       persistToLocalStorage()
 
-      // Sync default categories and items to Firestore for first-time users
       const categoryStore = useCategoryStore()
       const itemStore = useItemStore()
-      await setDoc(
-        doc(getFirestore(), COLLECTION_STATE, userId),
-        {
-          lists: lists.value,
-          categories: categoryStore.categories,
-          items: itemStore.items,
-          showIntro: settingsStore.showIntro,
-          currency: settingsStore.currency,
-          selectedListId: selectedListId.value,
-        },
-        { merge: true },
-      )
+      await syncSharedState({
+        lists: lists.value,
+        categories: categoryStore.categories,
+        items: itemStore.items,
+        showIntro: settingsStore.showIntro,
+        currency: settingsStore.currency,
+        selectedListId: selectedListId.value,
+      })
       return
     }
 
@@ -419,7 +376,6 @@ export const useListStore = defineStore('list', () => {
 
   async function upsertList(request: UpsertListRequest) {
     const uiStore = useUIStore()
-    const authStore = useAuthStore()
 
     uiStore.setSaving(true)
 
@@ -447,13 +403,7 @@ export const useListStore = defineStore('list', () => {
 
     persistToLocalStorage()
 
-    if (authStore.isLoggedIn && authStore.user) {
-      await setDoc(
-        doc(getFirestore(), COLLECTION_STATE, authStore.user.id),
-        { lists: lists.value },
-        { merge: true },
-      )
-    }
+    await syncSharedState({ lists: lists.value })
 
     uiStore.addNotification({
       type: 'success',
@@ -464,7 +414,6 @@ export const useListStore = defineStore('list', () => {
 
   async function deleteList(listId: string) {
     const uiStore = useUIStore()
-    const authStore = useAuthStore()
 
     uiStore.setSaving(true)
 
@@ -487,13 +436,7 @@ export const useListStore = defineStore('list', () => {
     lists.value = lists.value.filter((l) => l.id !== listId)
     sanitizeState()
 
-    if (authStore.isLoggedIn && authStore.user) {
-      await setDoc(
-        doc(getFirestore(), COLLECTION_STATE, authStore.user.id),
-        { lists: lists.value },
-        { merge: true },
-      )
-    }
+    await syncSharedState({ lists: lists.value })
 
     uiStore.addNotification({
       type: 'info',
@@ -503,20 +446,12 @@ export const useListStore = defineStore('list', () => {
   }
 
   async function setSelectedListId(listId: string) {
-    const authStore = useAuthStore()
-
     if (listExists(listId)) {
       selectedListId.value = listId
     }
     persistToLocalStorage()
 
-    if (authStore.isLoggedIn && authStore.user) {
-      await setDoc(
-        doc(getFirestore(), COLLECTION_STATE, authStore.user.id),
-        { lists: lists.value, selectedListId: listId },
-        { merge: true },
-      )
-    }
+    await syncSharedState({ lists: lists.value, selectedListId: listId })
   }
 
   function setTitleByListId(listId: string) {
@@ -529,7 +464,6 @@ export const useListStore = defineStore('list', () => {
 
   async function addItem(name: string) {
     const uiStore = useUIStore()
-    const authStore = useAuthStore()
     const itemStore = useItemStore()
 
     uiStore.setSaving(true)
@@ -594,18 +528,12 @@ export const useListStore = defineStore('list', () => {
 
     persistToLocalStorage()
 
-    if (authStore.isLoggedIn && authStore.user) {
-      const categoryStore = useCategoryStore()
-      await setDoc(
-        doc(getFirestore(), COLLECTION_STATE, authStore.user.id),
-        {
-          lists: lists.value,
-          categories: categoryStore.categories,
-          items: itemStore.items,
-        },
-        { merge: true },
-      )
-    }
+    const categoryStore = useCategoryStore()
+    await syncSharedState({
+      lists: lists.value,
+      categories: categoryStore.categories,
+      items: itemStore.items,
+    })
 
     uiStore.addNotification({
       type: 'success',
@@ -616,7 +544,6 @@ export const useListStore = defineStore('list', () => {
 
   async function updateItem(request: UpdateItemRequest) {
     const uiStore = useUIStore()
-    const authStore = useAuthStore()
     const itemStore = useItemStore()
     const categoryStore = useCategoryStore()
 
@@ -664,26 +591,16 @@ export const useListStore = defineStore('list', () => {
 
     persistToLocalStorage()
 
-    if (authStore.user === null) {
-      uiStore.setSaving(false)
-      return
-    }
-
-    await setDoc(
-      doc(getFirestore(), COLLECTION_STATE, authStore.user.id),
-      {
-        lists: lists.value,
-        categories: categoryStore.categories,
-        items: itemStore.items,
-      },
-      { merge: true },
-    )
+    await syncSharedState({
+      lists: lists.value,
+      categories: categoryStore.categories,
+      items: itemStore.items,
+    })
     uiStore.setSaving(false)
   }
 
   async function deleteListItem(itemId: string) {
     const uiStore = useUIStore()
-    const authStore = useAuthStore()
     const itemStore = useItemStore()
 
     const listIndex = lists.value.findIndex((l) => l.id === selectedListId.value)
@@ -696,16 +613,10 @@ export const useListStore = defineStore('list', () => {
 
     persistToLocalStorage()
 
-    if (!authStore.isLoggedIn || !authStore.user) return
-
     const item = itemStore.findItemById(itemId)
 
     uiStore.setSaving(true)
-    await setDoc(
-      doc(getFirestore(), COLLECTION_STATE, authStore.user.id),
-      { lists: lists.value },
-      { merge: true },
-    )
+    await syncSharedState({ lists: lists.value })
 
     uiStore.addNotification({
       type: 'info',
@@ -716,20 +627,13 @@ export const useListStore = defineStore('list', () => {
 
   async function addToCart(itemId: string) {
     const uiStore = useUIStore()
-    const authStore = useAuthStore()
     const itemStore = useItemStore()
 
     uiStore.setSaving(true)
     _setAddedToCart(itemId, true)
     persistToLocalStorage()
 
-    if (authStore.isLoggedIn && authStore.user) {
-      await setDoc(
-        doc(getFirestore(), COLLECTION_STATE, authStore.user.id),
-        { lists: lists.value },
-        { merge: true },
-      )
-    }
+    await syncSharedState({ lists: lists.value })
 
     const item = itemStore.findItemById(itemId)
     if (item) {
@@ -743,20 +647,13 @@ export const useListStore = defineStore('list', () => {
 
   async function removeFromCart(itemId: string) {
     const uiStore = useUIStore()
-    const authStore = useAuthStore()
     const itemStore = useItemStore()
 
     uiStore.setSaving(true)
     _setAddedToCart(itemId, false)
     persistToLocalStorage()
 
-    if (authStore.isLoggedIn && authStore.user) {
-      await setDoc(
-        doc(getFirestore(), COLLECTION_STATE, authStore.user.id),
-        { lists: lists.value },
-        { merge: true },
-      )
-    }
+    await syncSharedState({ lists: lists.value })
 
     const item = itemStore.findItemById(itemId)
     if (item) {
@@ -770,7 +667,6 @@ export const useListStore = defineStore('list', () => {
 
   async function emptyCartItems(listId: string) {
     const uiStore = useUIStore()
-    const authStore = useAuthStore()
 
     const listIndex = lists.value.findIndex((l) => l.id === listId)
     if (listIndex !== -1) {
@@ -782,14 +678,8 @@ export const useListStore = defineStore('list', () => {
 
     persistToLocalStorage()
 
-    if (!authStore.isLoggedIn || !authStore.user) return
-
     uiStore.setSaving(true)
-    await setDoc(
-      doc(getFirestore(), COLLECTION_STATE, authStore.user.id),
-      { lists: lists.value },
-      { merge: true },
-    )
+    await syncSharedState({ lists: lists.value })
 
     uiStore.addNotification({
       type: 'info',
@@ -799,7 +689,6 @@ export const useListStore = defineStore('list', () => {
   }
 
   async function toggleCartPanel() {
-    const authStore = useAuthStore()
     const listIndex = lists.value.findIndex((l) => l.id === selectedListId.value)
     if (listIndex !== -1) {
       lists.value[listIndex]!.cartPanelOpen = !lists.value[listIndex]!.cartPanelOpen
@@ -808,79 +697,7 @@ export const useListStore = defineStore('list', () => {
 
     persistToLocalStorage()
 
-    if (!authStore.isLoggedIn || !authStore.user) return
-    await setDoc(
-      doc(getFirestore(), COLLECTION_STATE, authStore.user.id),
-      { lists: lists.value },
-      { merge: true },
-    )
-  }
-
-  async function prepareDemoList() {
-    const itemStore = useItemStore()
-    const uiStore = useUIStore()
-
-    await addItem('Butter')
-    await addItem('Beer')
-    await addItem('Chicken')
-    await addItem('Milk')
-    await addItem('Potatoes')
-
-    await updateItem({
-      name: 'Butter',
-      categoryId: itemStore.findCategoryIdByItemId(itemStore.nameToId('Butter')),
-      pricePerUnit: 10.6,
-      quantity: 0.25,
-      addedToCart: false,
-      notes: 'Unsalted',
-      unit: 'kg',
-      itemId: itemStore.nameToId('Butter'),
-    })
-    await updateItem({
-      name: 'Beer',
-      categoryId: itemStore.findCategoryIdByItemId(itemStore.nameToId('Beer')),
-      pricePerUnit: 0.99,
-      quantity: 6,
-      addedToCart: false,
-      notes: 'Heineken',
-      unit: 'bottle',
-      itemId: itemStore.nameToId('Beer'),
-    })
-    await updateItem({
-      name: 'Milk',
-      categoryId: itemStore.findCategoryIdByItemId(itemStore.nameToId('Milk')),
-      pricePerUnit: 1.99,
-      quantity: 2,
-      addedToCart: false,
-      notes: 'Oat Milk',
-      unit: 'gallon',
-      itemId: itemStore.nameToId('Milk'),
-    })
-    await updateItem({
-      name: 'Potatoes',
-      categoryId: itemStore.findCategoryIdByItemId(itemStore.nameToId('Potatoes')),
-      pricePerUnit: 4.99,
-      quantity: 1,
-      addedToCart: false,
-      notes: 'Potatoes',
-      unit: 'bag',
-      itemId: itemStore.nameToId('Potatoes'),
-    })
-    await updateItem({
-      name: 'Chicken',
-      categoryId: itemStore.findCategoryIdByItemId(itemStore.nameToId('Chicken')),
-      pricePerUnit: 5.5,
-      quantity: 1,
-      addedToCart: true,
-      notes: 'Drumsticks',
-      unit: 'kg',
-      itemId: itemStore.nameToId('Chicken'),
-    })
-
-    uiStore.addNotification({
-      type: 'info',
-      message: 'List has been populated successfully',
-    })
+    await syncSharedState({ lists: lists.value })
   }
 
   function sanitizeState() {
@@ -991,7 +808,6 @@ export const useListStore = defineStore('list', () => {
     removeFromCart,
     emptyCartItems,
     toggleCartPanel,
-    prepareDemoList,
     sanitizeState,
     saveState,
     persistToLocalStorage,

@@ -1,4 +1,3 @@
-import { getFirestore, doc, setDoc } from 'firebase/firestore'
 import type { AppData, SelectItem } from '~/types/state'
 
 export const useSettingsStore = defineStore('settings', () => {
@@ -51,7 +50,6 @@ export const useSettingsStore = defineStore('settings', () => {
 
   async function setCurrency(newCurrency: string) {
     const uiStore = useUIStore()
-    const authStore = useAuthStore()
 
     uiStore.setSaving(true)
     currency.value = newCurrency
@@ -59,12 +57,8 @@ export const useSettingsStore = defineStore('settings', () => {
     const listStore = useListStore()
     listStore.persistToLocalStorage()
 
-    if (authStore.isLoggedIn && authStore.user) {
-      await setDoc(
-        doc(getFirestore(), 'states', authStore.user.id),
-        { currency: currency.value },
-        { merge: true },
-      )
+    if (listStore.stateLoaded) {
+      await syncSharedState({ currency: currency.value })
     }
 
     uiStore.addNotification({
@@ -75,18 +69,13 @@ export const useSettingsStore = defineStore('settings', () => {
   }
 
   async function setShowIntro(show: boolean) {
-    const authStore = useAuthStore()
     showIntro.value = show
 
     const listStore = useListStore()
     listStore.persistToLocalStorage()
 
-    if (authStore.isLoggedIn && authStore.user) {
-      await setDoc(
-        doc(getFirestore(), 'states', authStore.user.id),
-        { showIntro: showIntro.value },
-        { merge: true },
-      )
+    if (listStore.stateLoaded) {
+      await syncSharedState({ showIntro: showIntro.value })
     }
   }
 

@@ -1,27 +1,3 @@
-export type BlogEntry = {
-  title: string
-  timestamp: Date
-  intro: string
-  id: string
-  slug: string
-  readMinutes: number
-}
-
-export type Block = {
-  type: 'image' | 'paragraph' | 'quote' | 'heading_2' | 'heading_3'
-  contents?: Array<BlockContent>
-  id: string
-  image?: string
-}
-
-export type BlockContent = {
-  color: string
-  href?: string
-  bold: boolean
-  id: string
-  text: string
-}
-
 export type List = {
   name: string
   icon: string
@@ -37,12 +13,6 @@ export interface Notification {
   timeout: number
   active: boolean
   type: NotificationType
-}
-
-export interface User {
-  id: string
-  name: string | null
-  photoURL: string | null
 }
 
 export interface SelectItem {
@@ -134,7 +104,6 @@ export interface State {
   stateLoaded: boolean
   title: string
   showIntro: boolean
-  user: User | null
   categories: Array<Category>
   selectedListId: string
   lists: Array<List>
@@ -142,6 +111,4 @@ export interface State {
   currency: string
   notification: Notification
   navDrawerOpen: boolean
-  blogEntries: Array<BlogEntry>
-  blogStateLoaded: boolean
 }

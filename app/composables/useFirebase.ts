@@ -3,13 +3,12 @@ import { type Auth, getAuth } from 'firebase/auth'
 import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check'
 
 const firebaseConfig = {
-  apiKey: 'AIzaSyAoeOz6cobux6wPOw7XzBJ8wxywjeawpX0',
-  authDomain: 'hepilo-f5cd4.firebaseapp.com',
-  projectId: 'hepilo-f5cd4',
-  storageBucket: 'hepilo-f5cd4.appspot.com',
-  messagingSenderId: '188406853589',
-  appId: '1:188406853589:web:44027cc012b25de293175c',
-  measurementId: 'G-20SNSQ62TF',
+  apiKey: 'AIzaSyBuK6nJU0Gio_4g7vAxuMar8c_IKRvcH5c',
+  authDomain: 'pantry-doodoo.firebaseapp.com',
+  projectId: 'pantry-doodoo',
+  storageBucket: 'pantry-doodoo.firebasestorage.app',
+  messagingSenderId: '828105082859',
+  appId: '1:828105082859:web:e6186b7ebcb3e1c58ebbae',
 }
 
 let firebaseApp: FirebaseApp | undefined

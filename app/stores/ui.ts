@@ -1,4 +1,3 @@
-import { getFirestore, doc, setDoc } from 'firebase/firestore'
 import type { Notification, NotificationRequest } from '~/types/state'
 
 const DEFAULT_NOTIFICATION_TIMEOUT = 3000
@@ -59,17 +58,12 @@ export const useUIStore = defineStore('ui', () => {
   async function setNavDrawer(isOpen: boolean, persistToFirestore = true) {
     navDrawerOpen.value = isOpen
 
-    const authStore = useAuthStore()
     const listStore = useListStore()
     listStore.persistToLocalStorage()
 
-    if (!persistToFirestore || !authStore.isLoggedIn || !listStore.stateLoaded) return
+    if (!persistToFirestore || !listStore.stateLoaded) return
 
-    await setDoc(
-      doc(getFirestore(), 'states', authStore.user!.id),
-      { navDrawerOpen: navDrawerOpen.value },
-      { merge: true },
-    )
+    await syncSharedState({ navDrawerOpen: navDrawerOpen.value })
   }
 
   return {

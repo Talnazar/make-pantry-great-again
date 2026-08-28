@@ -1,4 +1,3 @@
-import { getFirestore, doc, setDoc } from 'firebase/firestore'
 import type { Category, Item, SelectItem, UpsertCategoryRequest } from '~/types/state'
 import defaultCategoriesJson from '~/assets/categories.json'
 
@@ -72,7 +71,6 @@ export const useCategoryStore = defineStore('category', () => {
 
   async function upsertCategory(request: UpsertCategoryRequest) {
     const uiStore = useUIStore()
-    const authStore = useAuthStore()
     const itemStore = useItemStore()
 
     uiStore.setSaving(true)
@@ -118,13 +116,7 @@ export const useCategoryStore = defineStore('category', () => {
     const listStore = useListStore()
     listStore.persistToLocalStorage()
 
-    if (authStore.isLoggedIn && authStore.user) {
-      await setDoc(
-        doc(getFirestore(), 'states', authStore.user.id),
-        { categories: categories.value, items: itemStore.items },
-        { merge: true },
-      )
-    }
+    await syncSharedState({ categories: categories.value, items: itemStore.items })
 
     uiStore.addNotification({
       type: 'success',
@@ -135,7 +127,6 @@ export const useCategoryStore = defineStore('category', () => {
 
   async function deleteCategory(categoryId: string) {
     const uiStore = useUIStore()
-    const authStore = useAuthStore()
     const itemStore = useItemStore()
 
     uiStore.setSaving(true)
@@ -149,13 +140,7 @@ export const useCategoryStore = defineStore('category', () => {
     const listStore = useListStore()
     listStore.persistToLocalStorage()
 
-    if (authStore.isLoggedIn && authStore.user) {
-      await setDoc(
-        doc(getFirestore(), 'states', authStore.user.id),
-        { categories: categories.value, items: itemStore.items },
-        { merge: true },
-      )
-    }
+    await syncSharedState({ categories: categories.value, items: itemStore.items })
 
     uiStore.addNotification({
       type: 'info',
@@ -165,7 +150,6 @@ export const useCategoryStore = defineStore('category', () => {
   }
 
   async function syncCategories() {
-    const authStore = useAuthStore()
     const colors = Array.from(CATEGORY_COLORS)
 
     Object.entries(defaultCategoriesJson).forEach(([key], index) => {
@@ -182,13 +166,7 @@ export const useCategoryStore = defineStore('category', () => {
     const listStore = useListStore()
     listStore.persistToLocalStorage()
 
-    if (authStore.isLoggedIn && authStore.user) {
-      await setDoc(
-        doc(getFirestore(), 'states', authStore.user.id),
-        { categories: categories.value },
-        { merge: true },
-      )
-    }
+    await syncSharedState({ categories: categories.value })
   }
 
   return {

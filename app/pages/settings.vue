@@ -23,7 +23,6 @@ definePageMeta({
   layout: 'default',
 })
 
-const dialogDelete = ref(false)
 const formValid = ref(false)
 const formCurrency = ref(settingsStore.currency)
 
@@ -31,11 +30,6 @@ onMounted(() => {
   uiStore.setTitle(t('settings.title'))
   formCurrency.value = settingsStore.currency
 })
-
-function closeDeleteDialog() {
-  dialogDelete.value = false
-  nextTick(() => clearForm())
-}
 
 function clearForm() {
   formCurrency.value = settingsStore.currency
@@ -121,23 +115,6 @@ function onSave() {
         <div class="text-center mt-4">
           <BackButton />
         </div>
-
-        <v-dialog v-model="dialogDelete" max-width="500" width="400">
-          <v-card>
-            <v-card-title class="text-headline-small">
-              {{ $t('settings.deleteAccountConfirmation') }}
-            </v-card-title>
-            <v-card-text>
-              {{ $t('settings.deleteAccountWarning') }}
-            </v-card-text>
-            <v-card-actions>
-              <v-btn color="info" variant="text" @click="closeDeleteDialog">
-                {{ $t('common.no') }}
-              </v-btn>
-              <v-spacer />
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
       </v-col>
     </v-row>
   </v-container>

@@ -103,7 +103,6 @@ export interface State {
   saving: boolean
   stateLoaded: boolean
   title: string
-  showIntro: boolean
   categories: Array<Category>
   selectedListId: string
   lists: Array<List>

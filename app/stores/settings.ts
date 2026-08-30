@@ -2,7 +2,6 @@ import type { AppData, SelectItem } from '~/types/state'
 
 export const useSettingsStore = defineStore('settings', () => {
   const currency = ref(DEFAULT_CURRENCY)
-  const showIntro = ref(true)
 
   const currencySymbol = computed((): string => {
     const symbol =
@@ -68,31 +67,17 @@ export const useSettingsStore = defineStore('settings', () => {
     uiStore.setSaving(false)
   }
 
-  async function setShowIntro(show: boolean) {
-    showIntro.value = show
-
-    const listStore = useListStore()
-    listStore.persistToLocalStorage()
-
-    if (listStore.stateLoaded) {
-      await syncSharedState({ showIntro: showIntro.value })
-    }
-  }
-
   function resetSettings() {
     currency.value = DEFAULT_CURRENCY
-    showIntro.value = true
   }
 
   return {
     currency,
-    showIntro,
     currencySymbol,
     formatCurrency,
     currencySelectItems,
     appData,
     setCurrency,
-    setShowIntro,
     resetSettings,
   }
 })

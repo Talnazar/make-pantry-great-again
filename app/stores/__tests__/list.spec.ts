@@ -13,7 +13,7 @@ vi.mock('firebase/firestore', () => ({
 
 const itemStore = { items: [] }
 const categoryStore = { categories: [] }
-const settingsStore = { currency: 'USD', showIntro: false }
+const settingsStore = { currency: 'USD' }
 const uiStore = {
   loading: false,
   saving: false,

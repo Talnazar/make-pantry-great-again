@@ -7,7 +7,6 @@ import {
   mdiNoteTextOutline,
   mdiNotificationClearAll,
 } from '@mdi/js'
-import { driver } from 'driver.js'
 import 'driver.js/dist/driver.css'
 import { CATEGORY_ID_UNCATEGORIZED } from '~/stores/category'
 import type { Category, MaterializedListItem, SelectItem } from '~/types/state'
@@ -206,70 +205,6 @@ function onSave() {
   clearForm()
 }
 
-function loadIntroductions() {
-  const d = driver({
-    onDestroyed: () => {
-      settingsStore.setShowIntro(false)
-    },
-    steps: [
-      {
-        element: '#add-item-input',
-        popover: {
-          title: t('intro.addItemTitle'),
-          description: t('intro.addItemDescription'),
-        },
-      },
-      {
-        element: '#list-category-title-0',
-        popover: {
-          title: t('intro.categoriesTitle'),
-          description: t('intro.categoriesDescription'),
-        },
-      },
-      {
-        element: '#list-item-details-0-0',
-        popover: {
-          title: t('intro.editItemTitle'),
-          description: t('intro.editItemDescription'),
-        },
-      },
-      {
-        element: '#list-item-checkbox-0-0',
-        popover: {
-          title: t('intro.moveToCartTitle'),
-          description: t('intro.moveToCartDescription'),
-        },
-      },
-      {
-        element: '#list-item-delete-0-0',
-        popover: {
-          title: t('intro.deleteItemTitle'),
-          description: t('intro.deleteItemDescription'),
-        },
-      },
-      {
-        element: '#header-drawer-btn',
-        popover: {
-          title: t('intro.listSettingsTitle'),
-          side: 'right' as const,
-          description: t('intro.listSettingsDescription'),
-        },
-      },
-      {
-        element: '#header-account-settings',
-        popover: {
-          title: t('intro.accountSettingsTitle'),
-          description: t('intro.accountSettingsDescription'),
-          side: 'left' as const,
-        },
-      },
-    ],
-  })
-  d.drive()
-}
-
-let introTimeout: ReturnType<typeof setTimeout> | null = null
-
 onMounted(async () => {
   await listStore.loadState()
   const listId = route.params.listId as string
@@ -283,18 +218,6 @@ onMounted(async () => {
   }
 
   listStore.setTitleByListId(listId)
-
-  if (settingsStore.showIntro) {
-    introTimeout = setTimeout(() => {
-      loadIntroductions()
-    }, 5000)
-  }
-})
-
-onUnmounted(() => {
-  if (introTimeout) {
-    clearTimeout(introTimeout)
-  }
 })
 </script>
 

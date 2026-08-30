@@ -151,21 +151,5 @@
     "title": "404: Sorry we can't find the page you're looking for",
     "takeMeHome": "Take Me Home",
     "urlNotFound": "The requested URL: {url} was not found."
-  },
-  "intro": {
-    "addItemTitle": "Add Item",
-    "addItemDescription": "Add an item to your shopping list.<br/>Type <b>10 Bananas</b> to add banana in your shopping list with quantity of <b>10</b>.",
-    "categoriesTitle": "Categories",
-    "categoriesDescription": "Shopping list items are grouped by categories with <em>fancy colors</em>.",
-    "editItemTitle": "Edit Item",
-    "editItemDescription": "Change the price or quantity of items in your shopping list",
-    "moveToCartTitle": "Move to Cart",
-    "moveToCartDescription": "Move items from your list to the shopping cart.",
-    "deleteItemTitle": "Delete Item",
-    "deleteItemDescription": "Remove items from your list.",
-    "listSettingsTitle": "List Settings",
-    "listSettingsDescription": "Add multiple shopping lists and manage your items and categories",
-    "accountSettingsTitle": "Account Settings",
-    "accountSettingsDescription": "Logout, manage your settings even delete your account"
   }
 }

@@ -202,7 +202,6 @@ export const useListStore = defineStore('list', () => {
         items: itemStore.items,
         categories: categoryStore.categories,
         currency: settingsStore.currency,
-        showIntro: settingsStore.showIntro,
         loading: uiStore.loading,
         saving: uiStore.saving,
         title: uiStore.title,
@@ -230,7 +229,6 @@ export const useListStore = defineStore('list', () => {
       items: itemStore.items,
       categories: categoryStore.categories,
       currency: settingsStore.currency,
-      showIntro: settingsStore.showIntro,
     })
   }
 
@@ -246,7 +244,6 @@ export const useListStore = defineStore('list', () => {
     selectedListId.value = data.selectedListId ?? selectedListId.value
     categoryStore.categories = data.categories ?? [{ ...DEFAULT_CATEGORY }]
     itemStore.items = data.items ?? itemStore.items
-    settingsStore.showIntro = data.showIntro ?? settingsStore.showIntro
     settingsStore.currency = data.currency ?? settingsStore.currency
 
     if (opts.useNavDrawerFromData) {
@@ -305,7 +302,6 @@ export const useListStore = defineStore('list', () => {
         lists: lists.value,
         categories: categoryStore.categories,
         items: itemStore.items,
-        showIntro: settingsStore.showIntro,
         currency: settingsStore.currency,
         selectedListId: selectedListId.value,
       })
@@ -329,7 +325,6 @@ export const useListStore = defineStore('list', () => {
       lists.value = state?.lists ?? lists.value
       categoryStore.categories = state?.categories ?? [{ ...DEFAULT_CATEGORY }]
       itemStore.items = state?.items ?? itemStore.items
-      settingsStore.showIntro = state?.showIntro ?? settingsStore.showIntro
       settingsStore.currency = state?.currency ?? settingsStore.currency
       selectedListId.value = state?.selectedListId ?? selectedListId.value
       uiStore.navDrawerOpen = (state?.navDrawerOpen ?? uiStore.navDrawerOpen) && !isMobile()

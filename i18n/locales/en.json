@@ -12,34 +12,11 @@
     "sendFeedback": "Send Feedback",
     "refresh": "Refresh",
     "settings": "Settings",
-    "getStarted": "Get Started",
     "version": "version"
   },
   "home": {
     "heroTitle": "Your Smart Shopping List",
-    "heroSubtitle": "Easily create and organize multiple shopping lists all in one place.",
-    "heroSeoDescription": "Hepilo is a free shopping list app that helps you organize groceries, sync lists across devices, and collaborate with family — all in one place.",
-    "getStarted": "Get Started",
-    "liveDemo": "Live Demo",
-    "getItOnGooglePlay": "Get it on Google Play",
-    "freeToUse": "FREE to use",
-    "noCreditCard": "No credit card required",
-    "budgetTitle": "Stay on top of your budget",
-    "budgetSubtitle": "Easily track the cost of your shopping list items so you don't go above budget.",
-    "openSourceTitle": "Transparent and 100% open source",
-    "openSourceSubtitle": "Our source code is available on GitHub under the",
-    "mitLicense": "MIT License",
-    "openSourceSubtitleSuffix": ". Feel free to fork it, twist it, flip it or review it to verify that our actions match with our words.",
-    "github": "Github",
-    "socialTitle": "I am social",
-    "socialSubtitle": "Follow me on twitter to stay updated on the latest features",
-    "followOnTwitter": "Follow {'@'}hepilohq",
-    "footerBlog": "Blog",
-    "footerPrivacyPolicy": "Privacy Policy",
-    "footerTermsAndConditions": "Terms And Conditions",
-    "footerMitLicense": "Released under the MIT License",
-    "footerCopyright": "Copyright © 2023-2026",
-    "typewriterStrings": ["Grocery", "Weekly", "Christmas", "Ultimate"]
+    "heroSeoDescription": "Pantry is a free shopping list app that helps you organize groceries, sync lists across devices, and collaborate with family — all in one place."
   },
   "list": {
     "addItem": "Add Item",
@@ -56,9 +33,7 @@
     "totalPriceHint": "Total Price: {price}",
     "itemCount": "{count} items",
     "itemCountSingular": "{count} item",
-    "deleteConfirmation": "Are you sure you want to delete",
-    "deleteListItem": "Delete",
-    "minRead": "min read"
+    "deleteConfirmation": "Are you sure you want to delete"
   },
   "item": {
     "addItem": "Add Item",

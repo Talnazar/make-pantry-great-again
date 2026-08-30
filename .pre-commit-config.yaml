@@ -1,4 +1,4 @@
-# Pre-commit hooks for the Hepilo repo.
+# Pre-commit hooks for the Pantry repo.
 # Active development happens in web/ (Nuxt 4 + pnpm); web-legacy/ is frozen.
 # Install once with: pre-commit install
 repos:

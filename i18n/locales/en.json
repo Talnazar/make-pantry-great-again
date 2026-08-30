@@ -88,9 +88,9 @@
     "placeholderQuantity": "e.g 1"
   },
   "pwa": {
-    "newContent": "A new version of Hepilo is available.",
+    "newContent": "A new version of Pantry is available.",
     "reload": "Reload",
-    "offlineReady": "Hepilo is ready to work offline."
+    "offlineReady": "Pantry is ready to work offline."
   },
   "notification": {
     "accountDeleted": "Your account has been deleted successfully",

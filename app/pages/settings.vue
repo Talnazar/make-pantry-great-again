@@ -11,7 +11,7 @@ const isDark = computed(() => theme.global.current.value.dark)
 function setTheme(newTheme: string) {
   theme.change(newTheme)
   if (import.meta.client) {
-    localStorage.setItem('hepilo-theme', newTheme)
+    localStorage.setItem('theme', newTheme)
   }
 }
 

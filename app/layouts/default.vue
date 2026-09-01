@@ -178,7 +178,7 @@ const iconMap = (iconName: string): string => listStore.listIcon(iconName)
 
 onMounted(async () => {
   // Restore saved theme
-  const savedTheme = localStorage.getItem('hepilo-theme')
+  const savedTheme = localStorage.getItem('theme')
   if (savedTheme && (savedTheme === 'light' || savedTheme === 'dark')) {
     theme.change(savedTheme)
   }

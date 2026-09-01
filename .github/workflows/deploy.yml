@@ -43,11 +43,11 @@ jobs:
       - name: Generate static site
         run: pnpm run generate
         env:
-          NUXT_PUBLIC_APP_NAME: Hepilo
-          NUXT_PUBLIC_SITE_URL: https://hepilo.com
-          NUXT_PUBLIC_SITE_EMAIL: arnold@hepilo.com
-          NUXT_PUBLIC_SITE_ANDROID_APP_URL: https://play.google.com/store/apps/details?id=com.hepilo.twa
-          NUXT_PUBLIC_GITHUB_LINK: https://github.com/NdoleStudio/hepilo
+          NUXT_PUBLIC_APP_NAME: Pantry
+          NUXT_PUBLIC_SITE_URL: https://pantry-doodoo.web.app
+          NUXT_PUBLIC_SITE_EMAIL: notArnold@pantry.com
+          NUXT_PUBLIC_SITE_ANDROID_APP_URL: https://play.google.com/store/apps/details?id=com.pantry.twa
+          NUXT_PUBLIC_GITHUB_LINK: https://github.com/Talnazar/make-pantry-great-again
           NUXT_PUBLIC_COMMIT_HASH: ${{ github.sha }}
           NUXT_PUBLIC_RECAPTCHA_SITE_KEY: 6Le4-jseAAAAACQavdg0uBHEk6cIPnfQ-jRCYklA
           SENTRY_DSN: https://1e5300c5ad8449968a2edbd2fb25e255@o291224.ingest.sentry.io/6244114
@@ -58,5 +58,5 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy .output/public --project-name=hepilo
+          command: pages deploy .output/public --project-name=pantry
           workingDirectory: web

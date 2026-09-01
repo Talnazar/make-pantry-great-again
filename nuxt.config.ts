@@ -10,13 +10,15 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      appName: process.env.NUXT_PUBLIC_APP_NAME || 'Hepilo',
-      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://hepilo.com',
-      siteEmail: process.env.NUXT_PUBLIC_SITE_EMAIL || 'arnold@hepilo.com',
+      appName: process.env.NUXT_PUBLIC_APP_NAME || 'Pantry',
+      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://pantry-doodoo.web.app',
+      siteEmail: process.env.NUXT_PUBLIC_SITE_EMAIL || 'notArnold@pantry.com',
       siteAndroidAppUrl:
         process.env.NUXT_PUBLIC_SITE_ANDROID_APP_URL ||
-        'https://play.google.com/store/apps/details?id=com.hepilo.twa',
-      githubLink: process.env.NUXT_PUBLIC_GITHUB_LINK || 'https://github.com/NdoleStudio/hepilo',
+        'https://play.google.com/store/apps/details?id=com.pantry.twa',
+      githubLink:
+        process.env.NUXT_PUBLIC_GITHUB_LINK ||
+        'https://github.com/Talnazar/make-pantry-great-again',
       commitHash: process.env.NUXT_PUBLIC_COMMIT_HASH || process.env.CF_PAGES_COMMIT_SHA || '',
     },
   },
@@ -53,7 +55,7 @@ export default defineNuxtConfig({
     head: {
       charset: 'utf-8',
       viewport: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no',
-      titleTemplate: '%s - Hepilo',
+      titleTemplate: '%s - Pantry',
       link: [
         {
           rel: 'apple-touch-icon',
@@ -65,7 +67,7 @@ export default defineNuxtConfig({
       meta: [
         { name: 'apple-mobile-web-app-capable', content: 'yes' },
         { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
-        { name: 'apple-mobile-web-app-title', content: 'Hepilo' },
+        { name: 'apple-mobile-web-app-title', content: 'Pantry' },
         // Status/network bar color: black in dark mode, lime in light mode.
         { name: 'theme-color', media: '(prefers-color-scheme: dark)', content: '#000000' },
         { name: 'theme-color', media: '(prefers-color-scheme: light)', content: '#C6FF00' },
@@ -125,7 +127,7 @@ export default defineNuxtConfig({
       cookieKey: 'i18n_redirected',
       redirectOn: 'root',
     },
-    baseUrl: 'https://hepilo.com',
+    baseUrl: 'https://pantry-doodoo.web.app',
     compilation: {
       strictMessage: false,
     },
@@ -134,14 +136,14 @@ export default defineNuxtConfig({
   pwa: {
     registerType: 'prompt',
     manifest: {
-      name: 'Hepilo - Shopping List',
-      short_name: 'Hepilo',
+      name: 'Pantry - Shopping List',
+      short_name: 'Pantry',
       description:
-        'Hepilo is a simple, offline-first shopping list app that keeps your lists in sync across all your devices.',
+        'Pantry is a simple, offline-first shopping list app that keeps your lists in sync across all your devices.',
       lang: 'en',
       theme_color: '#C6FF00',
       background_color: '#121212',
-      id: 'com.hepilo.twa',
+      id: 'com.pantry.twa',
       start_url: '/lists',
       scope: '/',
       display: 'standalone',
@@ -185,7 +187,7 @@ export default defineNuxtConfig({
           urlPattern: ({ request }) => request.destination === 'image',
           handler: 'CacheFirst',
           options: {
-            cacheName: 'hepilo-images',
+            cacheName: 'images',
             expiration: {
               maxEntries: 100,
               maxAgeSeconds: 60 * 60 * 24 * 30,
@@ -198,7 +200,7 @@ export default defineNuxtConfig({
             request.destination === 'font' || request.destination === 'style',
           handler: 'StaleWhileRevalidate',
           options: {
-            cacheName: 'hepilo-assets',
+            cacheName: 'assets',
             expiration: {
               maxEntries: 60,
               maxAgeSeconds: 60 * 60 * 24 * 30,
@@ -226,10 +228,10 @@ export default defineNuxtConfig({
   },
 
   site: {
-    url: process.env.NUXT_PUBLIC_SITE_URL || 'https://hepilo.com',
-    name: process.env.NUXT_PUBLIC_APP_NAME || 'Hepilo',
+    url: process.env.NUXT_PUBLIC_SITE_URL || 'https://pantry-doodoo.web.app',
+    name: process.env.NUXT_PUBLIC_APP_NAME || 'Pantry',
     description:
-      'Hepilo is a simple, offline-first shopping list app that keeps your lists in sync across all your devices.',
+      'Pantry is a simple, offline-first shopping list app that keeps your lists in sync across all your devices.',
   },
 
   sitemap: {
@@ -247,9 +249,9 @@ export default defineNuxtConfig({
   schemaOrg: {
     identity: {
       type: 'Organization',
-      name: 'Hepilo',
-      url: 'https://hepilo.com',
-      logo: 'https://hepilo.com/img/icons/android-chrome-512x512.png',
+      name: 'Pantry',
+      url: 'https://pantry-doodoo.web.app',
+      logo: 'https://pantry-doodoo.web.app/img/icons/android-chrome-512x512.png',
     },
   },
 

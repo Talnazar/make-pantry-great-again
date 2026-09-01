@@ -1,4 +1,4 @@
-# Copilot Instructions for Hepilo
+# Copilot Instructions for Pantry
 
 ## Build, Test, and Lint
 
@@ -34,7 +34,7 @@ yarn lint                    # ESLint
 
 ## Architecture
 
-Hepilo is a shopping list PWA with two deployments during an ongoing migration:
+Pantry is a shopping list PWA with two deployments during an ongoing migration:
 
 |                     | New App (`web/`)   | Legacy App (`web-legacy/`) |
 | ------------------- | ------------------ | -------------------------- |
@@ -142,7 +142,7 @@ Guard browser-only code with `import.meta.client`. Plugins that need the browser
 
 ### Theme
 
-Dark mode is the default. Primary color is `#C6FF00` (lime). Theme toggle persists to localStorage key `hepilo-theme` and reads with an `import.meta.client` guard on mount.
+Dark mode is the default. Primary color is `#C6FF00` (lime). Theme toggle persists to localStorage key `theme` and reads with an `import.meta.client` guard on mount.
 
 ### Tests
 

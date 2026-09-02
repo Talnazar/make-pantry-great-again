@@ -7,7 +7,6 @@ import {
   mdiNoteTextOutline,
   mdiNotificationClearAll,
 } from '@mdi/js'
-import 'driver.js/dist/driver.css'
 import { CATEGORY_ID_UNCATEGORIZED } from '~/stores/category'
 import type { Category, MaterializedListItem, SelectItem } from '~/types/state'
 import emptyListSvg from '~/assets/images/empty-list.svg'

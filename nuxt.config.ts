@@ -12,10 +12,6 @@ export default defineNuxtConfig({
     public: {
       appName: process.env.NUXT_PUBLIC_APP_NAME || 'Pantry',
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://pantry-doodoo.web.app',
-      siteEmail: process.env.NUXT_PUBLIC_SITE_EMAIL || 'notArnold@pantry.com',
-      siteAndroidAppUrl:
-        process.env.NUXT_PUBLIC_SITE_ANDROID_APP_URL ||
-        'https://play.google.com/store/apps/details?id=com.pantry.twa',
     },
   },
 

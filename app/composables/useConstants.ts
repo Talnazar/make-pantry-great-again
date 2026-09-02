@@ -21,7 +21,6 @@ export const useConstants = () => {
 
   const APP = {
     NAME: config.public.appName as string,
-    SUPPORT_EMAIL: config.public.appSupportEmail as string,
   }
 
   return {

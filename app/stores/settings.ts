@@ -41,8 +41,6 @@ export const useSettingsStore = defineStore('settings', () => {
     }
     return {
       url,
-      androidAppUrl: (config.public.siteAndroidAppUrl as string) || '',
-      email: (config.public.siteEmail as string) || '',
       name: (config.public.appName as string) || 'Pantry',
     }
   })

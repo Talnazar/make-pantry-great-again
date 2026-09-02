@@ -7,7 +7,6 @@ const { t } = useI18n()
 const itemStore = useItemStore()
 const categoryStore = useCategoryStore()
 const listStore = useListStore()
-const settingsStore = useSettingsStore()
 const uiStore = useUIStore()
 
 useHead({
@@ -29,7 +28,6 @@ const defaultItem: UpsertItemRequest = {
   name: '',
   unit: '',
   itemId: '',
-  pricePerUnit: 0,
   categoryId: CATEGORY_ID_UNCATEGORIZED,
 }
 const editedItem = ref<UpsertItemRequest>({ ...defaultItem })
@@ -39,12 +37,6 @@ const formNameRules = [
     (!!value && value.trim() !== '') || t('errors.categoryNameRequired'),
   (value: string | null): boolean | string =>
     (!!value && value.length <= 15) || t('errors.categoryNameTooLong'),
-]
-
-const formPricePerUnitRules = [
-  (value: number | null | string): boolean | string =>
-    (!Number.isNaN(value) && value != null && value !== '' && Number(value) >= 0) ||
-    t('errors.pricePerUnitMin', { min: settingsStore.formatCurrency(0) }),
 ]
 
 const filteredItems = computed(() => {
@@ -180,20 +172,6 @@ function clearForm() {
                     :placeholder="$t('common.placeholderItemName')"
                     variant="outlined"
                   />
-                  <v-text-field
-                    v-model="editedItem.pricePerUnit"
-                    class="mt-2"
-                    :disabled="uiStore.saving"
-                    aria-required="true"
-                    :rules="formPricePerUnitRules"
-                    :label="$t('common.pricePerUnit')"
-                    type="number"
-                    :prefix="settingsStore.currencySymbol"
-                    color="primary"
-                    persistent-placeholder
-                    :placeholder="$t('common.placeholderPrice')"
-                    variant="outlined"
-                  />
                   <v-select
                     v-model="editedItem.categoryId"
                     class="mt-2"
@@ -241,10 +219,6 @@ function clearForm() {
                   <v-list-item-subtitle>
                     <span class="text-label-small text-uppercase">
                       {{ itemStore.findCategoryNameByItemId(item.id) }}
-                    </span>
-                    -
-                    <span class="text-high-emphasis">
-                      {{ settingsStore.formatCurrency(item.pricePerUnit) }}
                     </span>
                   </v-list-item-subtitle>
                   <template #append>

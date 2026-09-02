@@ -18,7 +18,6 @@ const localePath = useLocalePath()
 const listStore = useListStore()
 const itemStore = useItemStore()
 const categoryStore = useCategoryStore()
-const settingsStore = useSettingsStore()
 const uiStore = useUIStore()
 
 useHead({
@@ -46,7 +45,6 @@ const formAddedToCart = ref(false)
 const formCategoryId = ref(CATEGORY_ID_UNCATEGORIZED)
 const formUnit = ref('')
 const formQuantity = ref(1)
-const formPricePerUnit = ref(0.0)
 const formNotes = ref('')
 
 const formNameRules = [
@@ -63,19 +61,10 @@ const formQuantityRules = [
     (Number(value) > 0 && Number(value) <= 999) ||
     t('errors.quantityRange'),
 ]
-const formPricePerUnitRules = [
-  (value: number | null | string): boolean | string =>
-    value === null ||
-    value === '' ||
-    Number(value) >= 0 ||
-    t('errors.pricePerUnitMoreThan', { min: settingsStore.formatCurrency(0) }),
-]
 const formNotesRules = [
   (value: string | null): boolean | string =>
     !value || value.length <= 1000 || t('errors.notesTooLong'),
 ]
-
-const totalPrice = computed(() => formPricePerUnit.value * formQuantity.value)
 
 function categoryClass(category: Category): Record<string, boolean> {
   return { [`text-${category.color || 'teal'}`]: true }
@@ -97,7 +86,6 @@ function clearForm() {
   formNotes.value = ''
   formItemId.value = ''
   formCategoryId.value = CATEGORY_ID_UNCATEGORIZED
-  formPricePerUnit.value = 0.0
   formAddedToCart.value = false
   formUnit.value = ''
 }
@@ -108,7 +96,6 @@ function setFormItem(item: MaterializedListItem) {
   formQuantity.value = item.listItem.quantity
   formNotes.value = item.listItem.notes
   formCategoryId.value = item.item.categoryId
-  formPricePerUnit.value = item.item.pricePerUnit
   formAddedToCart.value = item.listItem.addedToCart
   formUnit.value = item.item.unit ?? ''
 }
@@ -198,7 +185,6 @@ function onSave() {
     quantity: formQuantity.value,
     notes: formNotes.value,
     unit: formUnit.value,
-    pricePerUnit: formPricePerUnit.value,
     addedToCart: formAddedToCart.value,
   })
   dialog.value = false
@@ -351,13 +337,6 @@ onMounted(async () => {
                         />
                       </span>
                     </v-list-item-title>
-                    <v-list-item-subtitle class="text-body-small">
-                      {{
-                        settingsStore.formatCurrency(
-                          item.listItem.quantity * item.item.pricePerUnit,
-                        )
-                      }}
-                    </v-list-item-subtitle>
                   </div>
                   <template #append>
                     <div :id="'list-item-delete-' + index + '-' + listIndex">
@@ -443,13 +422,6 @@ onMounted(async () => {
                         }})
                       </span>
                     </v-list-item-title>
-                    <v-list-item-subtitle class="text-body-small">
-                      {{
-                        settingsStore.formatCurrency(
-                          item.listItem.quantity * item.item.pricePerUnit,
-                        )
-                      }}
-                    </v-list-item-subtitle>
                     <template #append>
                       <v-btn
                         :icon="mdiDelete"
@@ -464,39 +436,6 @@ onMounted(async () => {
             </v-expansion-panel-text>
           </v-expansion-panel>
         </v-expansion-panels>
-      </v-col>
-    </v-row>
-
-    <!-- Totals -->
-    <v-row v-if="listStore.cartTotal > 0.0 || listStore.listTotal > 0.0">
-      <v-col cols="12" lg="6" md="8" offset-md="2" offset-lg="3">
-        <v-card flat>
-          <v-card-text class="pb-0">
-            <v-row>
-              <v-col>
-                <div class="d-flex mb-n2" style="width: 100%">
-                  <div>
-                    <p class="text-label-large text-uppercase text-medium-emphasis">
-                      {{ $t('list.listTotal') }}
-                    </p>
-                    <p class="text-title-large mt-n2">
-                      {{ settingsStore.formatCurrency(listStore.listTotal) }}
-                    </p>
-                  </div>
-                  <v-spacer />
-                  <div>
-                    <p class="text-label-large text-uppercase text-right text-medium-emphasis">
-                      {{ $t('list.cartTotal') }}
-                    </p>
-                    <p class="text-title-large mt-n2">
-                      {{ settingsStore.formatCurrency(listStore.cartTotal) }}
-                    </p>
-                  </div>
-                </div>
-              </v-col>
-            </v-row>
-          </v-card-text>
-        </v-card>
       </v-col>
     </v-row>
 
@@ -563,22 +502,6 @@ onMounted(async () => {
                 :label="$t('common.unit')"
               />
             </div>
-            <v-text-field
-              v-model="formPricePerUnit"
-              class="mt-2"
-              :disabled="uiStore.saving"
-              aria-required="true"
-              :rules="formPricePerUnitRules"
-              :label="$t('common.pricePerUnit')"
-              type="number"
-              :prefix="settingsStore.currencySymbol"
-              color="primary"
-              persistent-placeholder
-              :placeholder="$t('common.placeholderPrice')"
-              :hint="$t('list.totalPriceHint', { price: settingsStore.formatCurrency(totalPrice) })"
-              :persistent-hint="totalPrice > 0"
-              variant="outlined"
-            />
             <v-select
               v-model="formCategoryId"
               class="mt-2"

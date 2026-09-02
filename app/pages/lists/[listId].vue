@@ -18,7 +18,6 @@ const localePath = useLocalePath()
 const listStore = useListStore()
 const itemStore = useItemStore()
 const categoryStore = useCategoryStore()
-const settingsStore = useSettingsStore()
 const uiStore = useUIStore()
 
 useHead({
@@ -437,39 +436,6 @@ onMounted(async () => {
             </v-expansion-panel-text>
           </v-expansion-panel>
         </v-expansion-panels>
-      </v-col>
-    </v-row>
-
-    <!-- Totals -->
-    <v-row v-if="listStore.cartTotal > 0.0 || listStore.listTotal > 0.0">
-      <v-col cols="12" lg="6" md="8" offset-md="2" offset-lg="3">
-        <v-card flat>
-          <v-card-text class="pb-0">
-            <v-row>
-              <v-col>
-                <div class="d-flex mb-n2" style="width: 100%">
-                  <div>
-                    <p class="text-label-large text-uppercase text-medium-emphasis">
-                      {{ $t('list.listTotal') }}
-                    </p>
-                    <p class="text-title-large mt-n2">
-                      {{ settingsStore.formatCurrency(listStore.listTotal) }}
-                    </p>
-                  </div>
-                  <v-spacer />
-                  <div>
-                    <p class="text-label-large text-uppercase text-right text-medium-emphasis">
-                      {{ $t('list.cartTotal') }}
-                    </p>
-                    <p class="text-title-large mt-n2">
-                      {{ settingsStore.formatCurrency(listStore.cartTotal) }}
-                    </p>
-                  </div>
-                </div>
-              </v-col>
-            </v-row>
-          </v-card-text>
-        </v-card>
       </v-col>
     </v-row>
 

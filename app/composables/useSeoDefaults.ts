@@ -1,4 +1,4 @@
-const SITE_URL = 'https://hepilo.com'
+const SITE_URL = 'https://pantry-doodoo.web.app'
 const DEFAULT_OG_IMAGE = '/img/header.png'
 
 export function useSeoDefaults(options: {
@@ -20,7 +20,7 @@ export function useSeoDefaults(options: {
     description: options.description,
     ogDescription: options.description,
     ogType: options.type ?? 'website',
-    ogSiteName: 'Hepilo',
+    ogSiteName: 'Pantry',
     ogImage: image,
     ogImageAlt: options.title,
     twitterCard: 'summary_large_image',

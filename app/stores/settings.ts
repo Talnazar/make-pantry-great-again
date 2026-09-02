@@ -43,7 +43,7 @@ export const useSettingsStore = defineStore('settings', () => {
       url,
       androidAppUrl: (config.public.siteAndroidAppUrl as string) || '',
       email: (config.public.siteEmail as string) || '',
-      name: (config.public.appName as string) || 'Hepilo',
+      name: (config.public.appName as string) || 'Pantry',
     }
   })
 

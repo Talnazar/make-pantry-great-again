@@ -134,14 +134,12 @@ export const useItemStore = defineStore('item', () => {
         id: nameToId(request.name),
         name: request.name.trim(),
         unit: null,
-        pricePerUnit: 0,
         categoryId: CATEGORY_ID_UNCATEGORIZED,
       }
     }
 
     item.unit = isValidUnit(request.unit) ? request.unit : null
     item.name = request.name.trim()
-    item.pricePerUnit = request.pricePerUnit
     item.categoryId = request.categoryId
 
     // Upsert into items array
@@ -224,7 +222,6 @@ export const useItemStore = defineStore('item', () => {
             categoryId: category ? category.id : CATEGORY_ID_UNCATEGORIZED,
             id: nameToId(itemName),
             name: toTitleCase(itemName),
-            pricePerUnit: 0,
           })
         } else {
           allItems = allItems.map((arrayItem: Item) => {

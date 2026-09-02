@@ -9,7 +9,6 @@ import type {
   List,
   ListItem,
   MaterializedList,
-  MaterializedListElement,
   MaterializedListItem,
   SelectItem,
   UpdateItemRequest,
@@ -164,20 +163,6 @@ export const useListStore = defineStore('list', () => {
 
   const listMaterializedItems = computed((): MaterializedList => materializedList(false))
   const cartMaterializedItems = computed((): MaterializedList => materializedList(true))
-
-  function calculateTotal(list: MaterializedList): number {
-    return list.reduce((sum: number, element: MaterializedListElement) => {
-      return (
-        sum +
-        element.items.reduce((value: number, item: MaterializedListItem) => {
-          return value + item.item.pricePerUnit * item.listItem.quantity
-        }, 0)
-      )
-    }, 0)
-  }
-
-  const listTotal = computed((): number => calculateTotal(listMaterializedItems.value))
-  const cartTotal = computed((): number => calculateTotal(cartMaterializedItems.value))
 
   const cartPanel = computed((): number => {
     return selectedList.value.cartPanelOpen ? 0 : -1
@@ -359,7 +344,6 @@ export const useListStore = defineStore('list', () => {
             .split(' ')
             .map((w) => w.slice(0, 1).toUpperCase() + w.slice(1).toLowerCase())
             .join(' '),
-          pricePerUnit: 0,
         })
       })
     })
@@ -491,7 +475,6 @@ export const useListStore = defineStore('list', () => {
         id: itemId,
         name: name.trim(),
         unit: null,
-        pricePerUnit: 0,
         categoryId: itemStore.findCategoryIdByItemId(itemId),
       }
       const idx = itemStore.items.findIndex((i) => i.id === item.id)
@@ -547,7 +530,6 @@ export const useListStore = defineStore('list', () => {
     const item = itemStore.findItemById(request.itemId)
     if (item) {
       item.name = request.name.trim()
-      item.pricePerUnit = request.pricePerUnit
       item.categoryId = request.categoryId
       item.unit = itemStore.isValidUnit(request.unit) ? request.unit : null
 
@@ -784,9 +766,6 @@ export const useListStore = defineStore('list', () => {
     materializedList,
     listMaterializedItems,
     cartMaterializedItems,
-    calculateTotal,
-    listTotal,
-    cartTotal,
     cartPanel,
     // Actions
     loadState,

@@ -75,7 +75,6 @@
     "category": "Category",
     "unit": "Unit",
     "quantity": "Quantity",
-    "pricePerUnit": "Price Per Unit",
     "currency": "Currency",
     "notes": "Notes",
     "edit": "Edit {name}",
@@ -116,8 +115,6 @@
     "nameTooLong50Store": "You name must be maximum 50 characters",
     "categoryNameRequired": "Category name is required",
     "categoryNameTooLong": "Category name must be less than 15 characters",
-    "pricePerUnitMin": "Price per unit must be at least {min}",
-    "pricePerUnitMoreThan": "Price per unit must be more than {min}",
     "quantityRequired": "Quantity is required",
     "quantityRange": "Quantity must be between 1 and 999",
     "notesTooLong": "Notes must be less than 300 characters"

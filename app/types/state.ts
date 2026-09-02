@@ -25,7 +25,6 @@ export interface Item {
   id: string
   name: string
   unit: string | null
-  pricePerUnit: number
   categoryId: string
 }
 
@@ -68,7 +67,6 @@ export interface UpsertListRequest {
 
 export interface UpsertItemRequest {
   itemId: string
-  pricePerUnit: number
   categoryId: string
   unit: string | null
   name: string
@@ -84,7 +82,6 @@ export type AppData = {
 export interface UpdateItemRequest {
   name: string
   categoryId: string
-  pricePerUnit: number
   quantity: number
   addedToCart: boolean
   notes: string

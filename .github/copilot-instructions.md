@@ -84,7 +84,7 @@ Cross-store calls are common — `list.ts` reads from `item`, `category`, `auth`
 | Type       | Purpose                                                                       |
 | ---------- | ----------------------------------------------------------------------------- |
 | `List`     | Shopping list with `id`, `name`, `icon`, `items: ListItem[]`, `cartPanelOpen` |
-| `Item`     | Reusable catalog item with `name`, `unit`, `pricePerUnit`, `categoryId`       |
+| `Item`     | Reusable catalog item with `name`, `unit`, `categoryId`                       |
 | `ListItem` | Instance of an Item in a List (`itemId`, `quantity`, `notes`, `addedToCart`)  |
 | `Category` | Grouping with `name` and `color`; default is `"uncategorized"`                |
 

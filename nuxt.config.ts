@@ -16,10 +16,6 @@ export default defineNuxtConfig({
       siteAndroidAppUrl:
         process.env.NUXT_PUBLIC_SITE_ANDROID_APP_URL ||
         'https://play.google.com/store/apps/details?id=com.pantry.twa',
-      githubLink:
-        process.env.NUXT_PUBLIC_GITHUB_LINK ||
-        'https://github.com/Talnazar/make-pantry-great-again',
-      commitHash: process.env.NUXT_PUBLIC_COMMIT_HASH || process.env.CF_PAGES_COMMIT_SHA || '',
     },
   },
 

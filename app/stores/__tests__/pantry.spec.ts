@@ -12,6 +12,7 @@ const itemStore = {
     { id: 'eggs', name: 'Eggs', unit: null, categoryId: 'food' },
     { id: 'rice', name: 'Rice', unit: null, categoryId: 'food' },
     { id: 'milk', name: 'Milk', unit: null, categoryId: 'food' },
+    { id: 'bananas', name: 'Bananas', unit: null, categoryId: 'food' },
   ],
   findItemById(itemId: string) {
     return this.items.find((item) => item.id === itemId)
@@ -114,19 +115,11 @@ describe('Pantry store', () => {
     })
   })
 
-  it('marks existing cart items as at home and skips missing Pantry items', async () => {
+  it('adds selected missing purchases as already bought', () => {
     const store = usePantryStore()
-    store.pantryItems = [
-      { itemId: 'milk', haveAtHome: false, needToBuy: true },
-      { itemId: 'eggs', haveAtHome: false, needToBuy: true },
-    ]
+    store.completePurchasedItems(['milk', 'bananas'], ['bananas'])
 
-    await store.markItemsAsBought(['milk', 'bananas'])
-
-    expect(store.pantryItems).toEqual([
-      { itemId: 'milk', haveAtHome: true, needToBuy: false },
-      { itemId: 'eggs', haveAtHome: false, needToBuy: true },
-    ])
+    expect(store.pantryItems).toEqual([{ itemId: 'bananas', haveAtHome: true, needToBuy: false }])
   })
 
   it('exports only selected items marked as need to buy without changing Pantry state', async () => {

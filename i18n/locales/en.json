@@ -34,7 +34,11 @@
     "totalPriceHint": "Total Price: {price}",
     "itemCount": "{count} items",
     "itemCountSingular": "{count} item",
-    "deleteConfirmation": "Are you sure you want to delete"
+    "deleteConfirmation": "Are you sure you want to delete",
+    "addPurchasedItemsTitle": "Add purchased items to Pantry?",
+    "addPurchasedItemsDescription": "These purchased items are not currently in your Pantry:",
+    "addSelected": "Add selected",
+    "skip": "Skip"
   },
   "item": {
     "addItem": "Add Item",

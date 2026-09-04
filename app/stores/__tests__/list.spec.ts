@@ -2,9 +2,9 @@ import { createPinia, defineStore, setActivePinia } from 'pinia'
 import { computed, ref } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const { syncSharedStateMock, markItemsAsBoughtMock } = vi.hoisted(() => ({
+const { syncSharedStateMock, completePurchasedItemsMock } = vi.hoisted(() => ({
   syncSharedStateMock: vi.fn(),
-  markItemsAsBoughtMock: vi.fn(),
+  completePurchasedItemsMock: vi.fn(),
 }))
 
 vi.mock('firebase/firestore', () => ({
@@ -13,7 +13,7 @@ vi.mock('firebase/firestore', () => ({
 }))
 
 const itemStore = { items: [] }
-const pantryStore = { pantryItems: [], markItemsAsBought: markItemsAsBoughtMock }
+const pantryStore = { pantryItems: [], completePurchasedItems: completePurchasedItemsMock }
 const categoryStore = { categories: [] }
 const settingsStore = { currency: 'USD' }
 const uiStore = {
@@ -46,7 +46,7 @@ describe('List store Firestore persistence', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     syncSharedStateMock.mockReset()
-    markItemsAsBoughtMock.mockReset()
+    completePurchasedItemsMock.mockReset()
     localStorage.clear()
   })
 
@@ -78,7 +78,7 @@ describe('List store Firestore persistence', () => {
 
     await store.finishAndClearCart('list-1')
 
-    expect(markItemsAsBoughtMock).toHaveBeenCalledWith(['milk', 'bananas'])
+    expect(completePurchasedItemsMock).toHaveBeenCalledWith(['milk', 'bananas'], [])
     expect(store.listById('list-1')?.items).toEqual([
       { itemId: 'eggs', notes: '', addedToCart: false, quantity: 1 },
     ])

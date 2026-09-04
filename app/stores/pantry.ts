@@ -71,20 +71,29 @@ export const usePantryStore = defineStore('pantry', () => {
     await updateFlags(itemId, { needToBuy })
   }
 
-  async function markItemsAsBought(itemIds: string[]) {
-    const itemIdsToUpdate = new Set(itemIds)
-    if (!pantryItems.value.some((pantryItem) => itemIdsToUpdate.has(pantryItem.itemId))) return
+  function completePurchasedItems(itemIds: string[], itemIdsToAdd: string[]) {
+    const itemStore = useItemStore()
+    const purchasedIds = new Set(itemIds)
+    const idsToAdd = new Set(itemIdsToAdd.filter((itemId) => purchasedIds.has(itemId)))
+    const existingIds = new Set(pantryItems.value.map((pantryItem) => pantryItem.itemId))
 
-    const uiStore = useUIStore()
-    uiStore.setSaving(true)
     pantryItems.value = pantryItems.value.map((pantryItem) =>
-      itemIdsToUpdate.has(pantryItem.itemId)
+      purchasedIds.has(pantryItem.itemId)
         ? { ...pantryItem, haveAtHome: true, needToBuy: false }
         : pantryItem,
     )
 
-    await persistAndSync()
-    uiStore.setSaving(false)
+    const newPantryItems = itemStore.items
+      .filter((item) => idsToAdd.has(item.id) && !existingIds.has(item.id))
+      .map((item) => ({
+        itemId: item.id,
+        haveAtHome: true,
+        needToBuy: false,
+      }))
+
+    if (newPantryItems.length > 0) {
+      pantryItems.value = [...pantryItems.value, ...newPantryItems]
+    }
   }
 
   async function createShoppingList(itemIds: string[], name?: string) {
@@ -164,7 +173,7 @@ export const usePantryStore = defineStore('pantry', () => {
     removeItem,
     setHaveAtHome,
     setNeedToBuy,
-    markItemsAsBought,
+    completePurchasedItems,
     createShoppingList,
     updateItemId,
     removeItemReference,

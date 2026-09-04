@@ -84,6 +84,13 @@ export const useListStore = defineStore('list', () => {
     return lists.value.find((list: List) => list.id === listId)
   }
 
+  function cartItemIds(listId: string): string[] {
+    const list = listById(listId)
+    if (!list) return []
+
+    return [...new Set(list.items.filter((li) => li.addedToCart).map((li) => li.itemId))]
+  }
+
   function listIcon(name: string): string {
     if (LIST_ICONS.has(name)) {
       return LIST_ICONS.get(name)!
@@ -673,17 +680,14 @@ export const useListStore = defineStore('list', () => {
     uiStore.setSaving(false)
   }
 
-  async function finishAndClearCart(listId: string) {
+  async function finishAndClearCart(listId: string, missingItemIdsToAdd: string[] = []) {
     const uiStore = useUIStore()
     const pantryStore = usePantryStore()
+    const cartItemIdsToFinish = cartItemIds(listId)
 
     const listIndex = lists.value.findIndex((l) => l.id === listId)
     if (listIndex !== -1) {
-      const cartItemIds = lists.value[listIndex]!.items.filter(
-        (li: ListItem) => li.addedToCart,
-      ).map((li: ListItem) => li.itemId)
-
-      await pantryStore.markItemsAsBought(cartItemIds)
+      pantryStore.completePurchasedItems(cartItemIdsToFinish, missingItemIdsToAdd)
 
       lists.value[listIndex]!.items = lists.value[listIndex]!.items.filter(
         (li: ListItem) => !li.addedToCart,
@@ -801,6 +805,7 @@ export const useListStore = defineStore('list', () => {
     listById,
     listIcon,
     listIconSelectItems,
+    cartItemIds,
     listHasItemId,
     ItemIdIsInCart,
     materializedList,

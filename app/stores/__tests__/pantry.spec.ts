@@ -88,7 +88,15 @@ describe('Pantry store', () => {
     await store.addItem('eggs')
     await store.addItem('missing')
 
-    expect(store.pantryItems).toEqual([{ itemId: 'eggs', haveAtHome: false, needToBuy: false }])
+    expect(store.pantryItems).toHaveLength(1)
+    expect(store.pantryItemById('eggs')).toMatchObject({
+      itemId: 'eggs',
+      haveAtHome: false,
+      needToBuy: false,
+    })
+    expect(store.pantryItemById('eggs')?.updatedAt).toMatch(
+      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
+    )
     expect(syncSharedStateMock).toHaveBeenCalledOnce()
   })
 
@@ -115,11 +123,65 @@ describe('Pantry store', () => {
     })
   })
 
+  it('updates updatedAt only when flags actually change', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-09-04T19:48:30.123Z'))
+    const store = usePantryStore()
+    await store.addItem('eggs')
+    const initialTimestamp = store.pantryItemById('eggs')!.updatedAt
+
+    await store.setHaveAtHome('eggs', false)
+    expect(store.pantryItemById('eggs')!.updatedAt).toBe(initialTimestamp)
+
+    vi.setSystemTime(new Date('2026-09-04T19:48:31.123Z'))
+    await store.setHaveAtHome('eggs', true)
+    expect(store.pantryItemById('eggs')!.updatedAt).not.toBe(initialTimestamp)
+    const changedTimestamp = store.pantryItemById('eggs')!.updatedAt
+
+    await store.setHaveAtHome('eggs', true)
+    expect(store.pantryItemById('eggs')!.updatedAt).toBe(changedTimestamp)
+    vi.useRealTimers()
+  })
+
   it('adds selected missing purchases as already bought', () => {
     const store = usePantryStore()
     store.completePurchasedItems(['milk', 'bananas'], ['bananas'])
 
-    expect(store.pantryItems).toEqual([{ itemId: 'bananas', haveAtHome: true, needToBuy: false }])
+    expect(store.pantryItems).toHaveLength(1)
+    expect(store.pantryItemById('bananas')).toMatchObject({
+      itemId: 'bananas',
+      haveAtHome: true,
+      needToBuy: false,
+    })
+    expect(store.pantryItemById('bananas')?.updatedAt).toMatch(
+      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
+    )
+  })
+
+  it('keeps the timestamp unchanged when purchased flags are already complete', () => {
+    const store = usePantryStore()
+    store.pantryItems = [
+      {
+        itemId: 'milk',
+        haveAtHome: true,
+        needToBuy: false,
+        updatedAt: '2026-09-01T00:00:00.000Z',
+      },
+    ]
+
+    store.completePurchasedItems(['milk'], [])
+
+    expect(store.pantryItemById('milk')?.updatedAt).toBe('2026-09-01T00:00:00.000Z')
+  })
+
+  it('adds a timestamp when hydrating legacy Pantry items', () => {
+    const store = usePantryStore()
+
+    store.hydrateItems([{ itemId: 'eggs', haveAtHome: false, needToBuy: true }])
+
+    expect(store.pantryItemById('eggs')?.updatedAt).toMatch(
+      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
+    )
   })
 
   it('exports only selected items marked as need to buy without changing Pantry state', async () => {
@@ -145,8 +207,18 @@ describe('Pantry store', () => {
   it('updates and removes catalog references', () => {
     const store = usePantryStore()
     store.pantryItems = [
-      { itemId: 'eggs', haveAtHome: true, needToBuy: false },
-      { itemId: 'rice', haveAtHome: false, needToBuy: true },
+      {
+        itemId: 'eggs',
+        haveAtHome: true,
+        needToBuy: false,
+        updatedAt: '2026-09-01T00:00:00.000Z',
+      },
+      {
+        itemId: 'rice',
+        haveAtHome: false,
+        needToBuy: true,
+        updatedAt: '2026-09-01T00:00:00.000Z',
+      },
     ]
 
     expect(store.updateItemId('eggs', 'milk')).toBe(true)
@@ -156,6 +228,7 @@ describe('Pantry store', () => {
       itemId: 'milk',
       haveAtHome: true,
       needToBuy: false,
+      updatedAt: '2026-09-01T00:00:00.000Z',
     })
 
     store.removeItemReference('milk')

@@ -241,7 +241,9 @@ export const useListStore = defineStore('list', () => {
     selectedListId.value = data.selectedListId ?? selectedListId.value
     categoryStore.categories = data.categories ?? [{ ...DEFAULT_CATEGORY }]
     itemStore.items = data.items ?? itemStore.items
-    pantryStore.pantryItems = data.pantryItems ?? pantryStore.pantryItems
+    if (data.pantryItems !== undefined) {
+      pantryStore.hydrateItems(data.pantryItems)
+    }
     settingsStore.currency = data.currency ?? settingsStore.currency
 
     if (opts.useNavDrawerFromData) {
@@ -326,7 +328,9 @@ export const useListStore = defineStore('list', () => {
       lists.value = state?.lists ?? lists.value
       categoryStore.categories = state?.categories ?? [{ ...DEFAULT_CATEGORY }]
       itemStore.items = state?.items ?? itemStore.items
-      pantryStore.pantryItems = state?.pantryItems ?? pantryStore.pantryItems
+      if (state?.pantryItems !== undefined) {
+        pantryStore.hydrateItems(state.pantryItems)
+      }
       settingsStore.currency = state?.currency ?? settingsStore.currency
       selectedListId.value = state?.selectedListId ?? selectedListId.value
       uiStore.navDrawerOpen = (state?.navDrawerOpen ?? uiStore.navDrawerOpen) && !isMobile()

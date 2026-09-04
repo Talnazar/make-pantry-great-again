@@ -45,6 +45,7 @@ export const usePantryStore = defineStore('pantry', () => {
         itemId,
         haveAtHome: false,
         needToBuy: false,
+        updatedAt: new Date().toISOString(),
       },
     ]
 
@@ -71,17 +72,35 @@ export const usePantryStore = defineStore('pantry', () => {
     await updateFlags(itemId, { needToBuy })
   }
 
+  function hydrateItems(items: Array<Partial<PantryItem>> = []) {
+    const fallbackTimestamp = new Date().toISOString()
+    pantryItems.value = items.map((pantryItem) => ({
+      itemId: pantryItem.itemId!,
+      haveAtHome: pantryItem.haveAtHome ?? false,
+      needToBuy: pantryItem.needToBuy ?? false,
+      updatedAt: pantryItem.updatedAt ?? fallbackTimestamp,
+    }))
+  }
+
   function completePurchasedItems(itemIds: string[], itemIdsToAdd: string[]) {
     const itemStore = useItemStore()
     const purchasedIds = new Set(itemIds)
     const idsToAdd = new Set(itemIdsToAdd.filter((itemId) => purchasedIds.has(itemId)))
     const existingIds = new Set(pantryItems.value.map((pantryItem) => pantryItem.itemId))
 
-    pantryItems.value = pantryItems.value.map((pantryItem) =>
-      purchasedIds.has(pantryItem.itemId)
-        ? { ...pantryItem, haveAtHome: true, needToBuy: false }
-        : pantryItem,
-    )
+    pantryItems.value = pantryItems.value.map((pantryItem) => {
+      if (!purchasedIds.has(pantryItem.itemId)) return pantryItem
+
+      const flagsChanged = !pantryItem.haveAtHome || pantryItem.needToBuy
+      return flagsChanged
+        ? {
+            ...pantryItem,
+            haveAtHome: true,
+            needToBuy: false,
+            updatedAt: new Date().toISOString(),
+          }
+        : pantryItem
+    })
 
     const newPantryItems = itemStore.items
       .filter((item) => idsToAdd.has(item.id) && !existingIds.has(item.id))
@@ -89,6 +108,7 @@ export const usePantryStore = defineStore('pantry', () => {
         itemId: item.id,
         haveAtHome: true,
         needToBuy: false,
+        updatedAt: new Date().toISOString(),
       }))
 
     if (newPantryItems.length > 0) {
@@ -147,9 +167,18 @@ export const usePantryStore = defineStore('pantry', () => {
 
     const uiStore = useUIStore()
     uiStore.setSaving(true)
-    pantryItems.value = pantryItems.value.map((pantryItem) =>
-      pantryItem.itemId === itemId ? { ...pantryItem, ...flags } : pantryItem,
-    )
+    pantryItems.value = pantryItems.value.map((pantryItem) => {
+      if (pantryItem.itemId !== itemId) return pantryItem
+
+      const haveAtHome = flags.haveAtHome ?? pantryItem.haveAtHome
+      const needToBuy = flags.needToBuy ?? pantryItem.needToBuy
+      const flagsChanged =
+        haveAtHome !== pantryItem.haveAtHome || needToBuy !== pantryItem.needToBuy
+
+      return flagsChanged
+        ? { ...pantryItem, haveAtHome, needToBuy, updatedAt: new Date().toISOString() }
+        : pantryItem
+    })
 
     await persistAndSync()
     uiStore.setSaving(false)
@@ -165,6 +194,7 @@ export const usePantryStore = defineStore('pantry', () => {
 
   return {
     pantryItems,
+    hydrateItems,
     materializedPantryItems,
     itemsToBuy,
     pantryItemById,

@@ -125,6 +125,7 @@ export const useItemStore = defineStore('item', () => {
   async function upsertItem(request: UpsertItemRequest) {
     const uiStore = useUIStore()
     const listStore = useListStore()
+    const pantryStore = usePantryStore()
 
     uiStore.setSaving(true)
 
@@ -169,6 +170,8 @@ export const useItemStore = defineStore('item', () => {
         })
         return list
       })
+
+      pantryStore.updateItemId(oldId, newId)
     }
 
     listStore.persistToLocalStorage()
@@ -178,6 +181,7 @@ export const useItemStore = defineStore('item', () => {
       lists: listStore.lists,
       categories: categoryStore.categories,
       items: items.value,
+      pantryItems: pantryStore.pantryItems,
     })
 
     uiStore.setSaving(false)
@@ -186,6 +190,7 @@ export const useItemStore = defineStore('item', () => {
   async function deleteItem(itemId: string) {
     const uiStore = useUIStore()
     const listStore = useListStore()
+    const pantryStore = usePantryStore()
     const categoryStore = useCategoryStore()
 
     uiStore.setSaving(true)
@@ -197,10 +202,15 @@ export const useItemStore = defineStore('item', () => {
       list.items = list.items.filter((li: ListItem) => li.itemId !== itemId)
       return list
     })
+    pantryStore.removeItemReference(itemId)
 
     listStore.persistToLocalStorage()
 
-    await syncSharedState({ categories: categoryStore.categories, items: items.value })
+    await syncSharedState({
+      categories: categoryStore.categories,
+      items: items.value,
+      pantryItems: pantryStore.pantryItems,
+    })
 
     uiStore.addNotification({
       type: 'info',

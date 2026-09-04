@@ -163,7 +163,7 @@ onMounted(async () => {
 <template>
   <v-container>
     <v-row>
-      <v-col cols="12" lg="6" md="8" offset-md="2" offset-lg="3">
+      <v-col cols="12">
         <div class="d-flex align-center ga-3 mb-4">
           <v-text-field
             v-model="searchQuery"

@@ -23,6 +23,7 @@ const exportListName = ref('')
 const creatingList = ref(false)
 const haveAtHomeFilter = ref('all')
 const needToBuyFilter = ref('all')
+const sortOption = ref('nameAsc')
 
 const availableItems = computed(() =>
   itemStore.items
@@ -47,6 +48,18 @@ const filteredPantryItems = computed(() =>
     return matchesHaveAtHome && matchesNeedToBuy
   }),
 )
+
+const sortOptions = computed(() => [
+  { title: t('pantry.sortNameAsc'), value: 'nameAsc' },
+  { title: t('pantry.sortNameDesc'), value: 'nameDesc' },
+])
+
+const sortedPantryItems = computed(() => {
+  return [...filteredPantryItems.value].sort((a, b) => {
+    const comparison = a.item.name.localeCompare(b.item.name)
+    return sortOption.value === 'nameDesc' ? -comparison : comparison
+  })
+})
 
 function openExportDialog() {
   selectedExportItemIds.value = pantryStore.itemsToBuy.map(({ pantryItem }) => pantryItem.itemId)
@@ -133,6 +146,14 @@ onMounted(async () => {
             density="comfortable"
             hide-details
           />
+          <v-select
+            v-model="sortOption"
+            :items="sortOptions"
+            :label="t('pantry.sortBy')"
+            variant="outlined"
+            density="comfortable"
+            hide-details
+          />
         </div>
 
         <div class="d-flex justify-end mb-4">
@@ -157,9 +178,9 @@ onMounted(async () => {
         />
 
         <v-card v-else flat>
-          <v-list v-if="filteredPantryItems.length > 0" lines="two" class="px-0">
+          <v-list v-if="sortedPantryItems.length > 0" lines="two" class="px-0">
             <template
-              v-for="(materializedItem, index) in filteredPantryItems"
+              v-for="(materializedItem, index) in sortedPantryItems"
               :key="materializedItem.item.id"
             >
               <v-list-item>
@@ -201,7 +222,7 @@ onMounted(async () => {
                   </div>
                 </template>
               </v-list-item>
-              <v-divider v-if="index < filteredPantryItems.length - 1" />
+              <v-divider v-if="index < sortedPantryItems.length - 1" />
             </template>
           </v-list>
           <div v-else class="text-center py-12 text-medium-emphasis">

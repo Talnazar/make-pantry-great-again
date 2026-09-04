@@ -49,6 +49,8 @@
     "addItem": "Add Item",
     "chooseCatalogItem": "Choose an item from the catalog",
     "createShoppingList": "Create shopping list",
+    "listName": "List name",
+    "defaultListName": "Pantry Shopping List",
     "haveAtHome": "Have at home",
     "needToBuy": "Need to buy",
     "removeItem": "Remove {name}",

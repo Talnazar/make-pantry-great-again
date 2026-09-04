@@ -19,6 +19,7 @@ definePageMeta({
 const selectedCatalogItemId = ref<string | null>(null)
 const exportDialog = ref(false)
 const selectedExportItemIds = ref<string[]>([])
+const exportListName = ref('')
 const creatingList = ref(false)
 
 const availableItems = computed(() =>
@@ -29,6 +30,11 @@ const availableItems = computed(() =>
 
 function openExportDialog() {
   selectedExportItemIds.value = pantryStore.itemsToBuy.map(({ pantryItem }) => pantryItem.itemId)
+  const today = new Date()
+  const date = [today.getFullYear(), today.getMonth() + 1, today.getDate()]
+    .map((part) => part.toString().padStart(2, '0'))
+    .join('-')
+  exportListName.value = `${t('pantry.defaultListName')} - ${date}`
   exportDialog.value = true
 }
 
@@ -45,7 +51,10 @@ async function addSelectedItem() {
 
 async function createShoppingList() {
   creatingList.value = true
-  const listId = await pantryStore.createShoppingList(selectedExportItemIds.value)
+  const listId = await pantryStore.createShoppingList(
+    selectedExportItemIds.value,
+    exportListName.value,
+  )
   creatingList.value = false
 
   if (!listId) return
@@ -179,6 +188,13 @@ onMounted(async () => {
         </v-card-title>
         <v-card-text>
           <p class="mb-3">{{ t('pantry.reviewDescription') }}</p>
+          <v-text-field
+            v-model="exportListName"
+            :label="t('pantry.listName')"
+            variant="outlined"
+            class="mb-3"
+            hide-details
+          />
           <v-checkbox
             v-for="materializedItem in pantryStore.itemsToBuy"
             :key="materializedItem.item.id"

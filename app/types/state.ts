@@ -41,6 +41,12 @@ export type ListItem = {
   quantity: number
 }
 
+export type PantryItem = {
+  itemId: string
+  haveAtHome: boolean
+  needToBuy: boolean
+}
+
 export interface MaterializedListItem {
   item: Item
   listItem: ListItem

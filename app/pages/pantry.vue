@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { mdiCartPlus, mdiClose, mdiDelete, mdiPlus } from '@mdi/js'
+import type { Category } from '~/types/state'
+import type { MaterializedPantryItem } from '~/stores/pantry'
 
 const { t } = useI18n()
 const listStore = useListStore()
@@ -24,6 +26,8 @@ const creatingList = ref(false)
 const haveAtHomeFilter = ref('all')
 const needToBuyFilter = ref('all')
 const sortOption = ref('nameAsc')
+const groupByCategory = ref(false)
+const categoryStore = useCategoryStore()
 
 const availableItems = computed(() =>
   itemStore.items
@@ -60,6 +64,29 @@ const sortedPantryItems = computed(() => {
     return sortOption.value === 'nameDesc' ? -comparison : comparison
   })
 })
+
+const groupedPantryItems = computed(() => {
+  const groups = new Map<string, { category: Category; items: MaterializedPantryItem[] }>()
+
+  sortedPantryItems.value.forEach((materializedItem) => {
+    const category =
+      categoryStore.findCategoryById(materializedItem.item.categoryId) ??
+      ({ id: 'uncategorized', name: t('category.uncategorized'), color: 'teal' } satisfies Category)
+    const group = groups.get(category.id)
+
+    if (group) {
+      group.items.push(materializedItem)
+    } else {
+      groups.set(category.id, { category, items: [materializedItem] })
+    }
+  })
+
+  return [...groups.values()].sort((a, b) => a.category.name.localeCompare(b.category.name))
+})
+
+function categoryClass(category: Category): string {
+  return `text-${category.color || 'teal'}`
+}
 
 function openExportDialog() {
   selectedExportItemIds.value = pantryStore.itemsToBuy.map(({ pantryItem }) => pantryItem.itemId)
@@ -154,6 +181,12 @@ onMounted(async () => {
             density="comfortable"
             hide-details
           />
+          <v-checkbox
+            v-model="groupByCategory"
+            :label="t('pantry.groupByCategory')"
+            hide-details
+            color="primary"
+          />
         </div>
 
         <div class="d-flex justify-end mb-4">
@@ -178,7 +211,7 @@ onMounted(async () => {
         />
 
         <v-card v-else flat>
-          <v-list v-if="sortedPantryItems.length > 0" lines="two" class="px-0">
+          <v-list v-if="sortedPantryItems.length > 0 && !groupByCategory" lines="two" class="px-0">
             <template
               v-for="(materializedItem, index) in sortedPantryItems"
               :key="materializedItem.item.id"
@@ -223,6 +256,65 @@ onMounted(async () => {
                 </template>
               </v-list-item>
               <v-divider v-if="index < sortedPantryItems.length - 1" />
+            </template>
+          </v-list>
+          <v-list v-else-if="sortedPantryItems.length > 0" lines="two" class="px-0">
+            <template v-for="(group, groupIndex) in groupedPantryItems" :key="group.category.id">
+              <v-list-subheader
+                class="text-label-large text-uppercase font-weight-bold"
+                :class="categoryClass(group.category)"
+              >
+                {{ group.category.name }}
+              </v-list-subheader>
+              <template
+                v-for="(materializedItem, itemIndex) in group.items"
+                :key="materializedItem.item.id"
+              >
+                <v-list-item>
+                  <v-list-item-title>{{ materializedItem.item.name }}</v-list-item-title>
+                  <template #append>
+                    <div class="d-flex align-center ga-2">
+                      <v-checkbox
+                        :model-value="materializedItem.pantryItem.haveAtHome"
+                        :label="t('pantry.haveAtHome')"
+                        hide-details
+                        color="primary"
+                        @update:model-value="
+                          pantryStore.setHaveAtHome(materializedItem.item.id, $event ?? false)
+                        "
+                      />
+                      <v-checkbox
+                        :model-value="materializedItem.pantryItem.needToBuy"
+                        :label="t('pantry.needToBuy')"
+                        hide-details
+                        color="primary"
+                        @update:model-value="
+                          pantryStore.setNeedToBuy(materializedItem.item.id, $event ?? false)
+                        "
+                      />
+                      <v-tooltip location="bottom">
+                        <template #activator="{ props: tooltipProps }">
+                          <v-btn
+                            v-bind="tooltipProps"
+                            :icon="mdiDelete"
+                            color="error"
+                            variant="text"
+                            @click="pantryStore.removeItem(materializedItem.item.id)"
+                          />
+                        </template>
+                        <span>{{
+                          t('pantry.removeItem', { name: materializedItem.item.name })
+                        }}</span>
+                      </v-tooltip>
+                    </div>
+                  </template>
+                </v-list-item>
+                <v-divider
+                  v-if="
+                    itemIndex < group.items.length - 1 || groupIndex < groupedPantryItems.length - 1
+                  "
+                />
+              </template>
             </template>
           </v-list>
           <div v-else class="text-center py-12 text-medium-emphasis">

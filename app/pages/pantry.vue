@@ -28,6 +28,7 @@ const needToBuyFilter = ref('all')
 const sortOption = ref('nameAsc')
 const groupByCategory = ref(false)
 const searchQuery = ref('')
+const expandedCategoryIds = ref<string[]>([])
 const categoryStore = useCategoryStore()
 
 const availableItems = computed(() =>
@@ -86,6 +87,23 @@ const groupedPantryItems = computed(() => {
 
   return [...groups.values()].sort((a, b) => a.category.name.localeCompare(b.category.name))
 })
+
+watch(
+  groupedPantryItems,
+  (groups) => {
+    const categoryIds = groups.map((group) => group.category.id)
+    if (expandedCategoryIds.value.length === 0) {
+      expandedCategoryIds.value = categoryIds
+      return
+    }
+
+    expandedCategoryIds.value = [
+      ...expandedCategoryIds.value.filter((categoryId) => categoryIds.includes(categoryId)),
+      ...categoryIds.filter((categoryId) => !expandedCategoryIds.value.includes(categoryId)),
+    ]
+  },
+  { immediate: true },
+)
 
 function categoryClass(category: Category): string {
   return `text-${category.color || 'teal'}`
@@ -270,65 +288,74 @@ onMounted(async () => {
               <v-divider v-if="index < sortedPantryItems.length - 1" />
             </template>
           </v-list>
-          <v-list v-else-if="sortedPantryItems.length > 0" lines="two" class="px-0">
-            <template v-for="(group, groupIndex) in groupedPantryItems" :key="group.category.id">
-              <v-list-subheader
+          <v-expansion-panels
+            v-else-if="sortedPantryItems.length > 0"
+            v-model="expandedCategoryIds"
+            multiple
+            variant="accordion"
+          >
+            <v-expansion-panel
+              v-for="group in groupedPantryItems"
+              :key="group.category.id"
+              :value="group.category.id"
+            >
+              <v-expansion-panel-title
                 class="text-label-large text-uppercase font-weight-bold"
                 :class="categoryClass(group.category)"
               >
                 {{ group.category.name }}
-              </v-list-subheader>
-              <template
-                v-for="(materializedItem, itemIndex) in group.items"
-                :key="materializedItem.item.id"
-              >
-                <v-list-item>
-                  <v-list-item-title>{{ materializedItem.item.name }}</v-list-item-title>
-                  <template #append>
-                    <div class="d-flex align-center ga-2">
-                      <v-checkbox
-                        :model-value="materializedItem.pantryItem.haveAtHome"
-                        :label="t('pantry.haveAtHome')"
-                        hide-details
-                        color="primary"
-                        @update:model-value="
-                          pantryStore.setHaveAtHome(materializedItem.item.id, $event ?? false)
-                        "
-                      />
-                      <v-checkbox
-                        :model-value="materializedItem.pantryItem.needToBuy"
-                        :label="t('pantry.needToBuy')"
-                        hide-details
-                        color="primary"
-                        @update:model-value="
-                          pantryStore.setNeedToBuy(materializedItem.item.id, $event ?? false)
-                        "
-                      />
-                      <v-tooltip location="bottom">
-                        <template #activator="{ props: tooltipProps }">
-                          <v-btn
-                            v-bind="tooltipProps"
-                            :icon="mdiDelete"
-                            color="error"
-                            variant="text"
-                            @click="pantryStore.removeItem(materializedItem.item.id)"
+              </v-expansion-panel-title>
+              <v-expansion-panel-text class="pa-0">
+                <v-list lines="two" class="px-0">
+                  <template
+                    v-for="(materializedItem, itemIndex) in group.items"
+                    :key="materializedItem.item.id"
+                  >
+                    <v-list-item>
+                      <v-list-item-title>{{ materializedItem.item.name }}</v-list-item-title>
+                      <template #append>
+                        <div class="d-flex align-center ga-2">
+                          <v-checkbox
+                            :model-value="materializedItem.pantryItem.haveAtHome"
+                            :label="t('pantry.haveAtHome')"
+                            hide-details
+                            color="primary"
+                            @update:model-value="
+                              pantryStore.setHaveAtHome(materializedItem.item.id, $event ?? false)
+                            "
                           />
-                        </template>
-                        <span>{{
-                          t('pantry.removeItem', { name: materializedItem.item.name })
-                        }}</span>
-                      </v-tooltip>
-                    </div>
+                          <v-checkbox
+                            :model-value="materializedItem.pantryItem.needToBuy"
+                            :label="t('pantry.needToBuy')"
+                            hide-details
+                            color="primary"
+                            @update:model-value="
+                              pantryStore.setNeedToBuy(materializedItem.item.id, $event ?? false)
+                            "
+                          />
+                          <v-tooltip location="bottom">
+                            <template #activator="{ props: tooltipProps }">
+                              <v-btn
+                                v-bind="tooltipProps"
+                                :icon="mdiDelete"
+                                color="error"
+                                variant="text"
+                                @click="pantryStore.removeItem(materializedItem.item.id)"
+                              />
+                            </template>
+                            <span>{{
+                              t('pantry.removeItem', { name: materializedItem.item.name })
+                            }}</span>
+                          </v-tooltip>
+                        </div>
+                      </template>
+                    </v-list-item>
+                    <v-divider v-if="itemIndex < group.items.length - 1" />
                   </template>
-                </v-list-item>
-                <v-divider
-                  v-if="
-                    itemIndex < group.items.length - 1 || groupIndex < groupedPantryItems.length - 1
-                  "
-                />
-              </template>
-            </template>
-          </v-list>
+                </v-list>
+              </v-expansion-panel-text>
+            </v-expansion-panel>
+          </v-expansion-panels>
           <div v-else class="text-center py-12 text-medium-emphasis">
             <p class="text-title-large mb-2">
               {{

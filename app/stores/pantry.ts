@@ -71,7 +71,7 @@ export const usePantryStore = defineStore('pantry', () => {
     await updateFlags(itemId, { needToBuy })
   }
 
-  async function createShoppingList(itemIds: string[], name: string = 'Pantry Shopping List') {
+  async function createShoppingList(itemIds: string[], name?: string) {
     const selectedIds = new Set(itemIds)
     // Todo : I dont think we need to filter it again and we can assume that the input alreay have only need to buy.
     const exportItems = itemsToBuy.value.filter(({ pantryItem }) =>
@@ -82,10 +82,16 @@ export const usePantryStore = defineStore('pantry', () => {
 
     const listStore = useListStore()
     const listId = crypto.randomUUID()
+    const today = new Date()
+    const date = [today.getFullYear(), today.getMonth() + 1, today.getDate()]
+      .map((part) => part.toString().padStart(2, '0'))
+      .join('-')
+    const defaultName = `Pantry Shopping List - ${date}`
+
     return listStore.createListWithItems(
       {
         id: listId,
-        name: name.trim() || 'Pantry Shopping List',
+        name: name?.trim() || defaultName,
         icon: 'list',
       },
       exportItems.map(({ pantryItem }) => pantryItem.itemId),

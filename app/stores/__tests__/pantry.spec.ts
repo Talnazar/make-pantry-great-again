@@ -125,6 +125,9 @@ describe('Pantry store', () => {
     const listId = await store.createShoppingList(['eggs'])
 
     expect(listId).toBe('pantry-list-id')
+    expect(listStore.listById('pantry-list-id')?.name).toMatch(
+      /^Pantry Shopping List - \d{4}-\d{2}-\d{2}$/,
+    )
     expect(listStore.listById('pantry-list-id')?.items).toEqual([
       { itemId: 'eggs', notes: '', addedToCart: false, quantity: 1 },
     ])

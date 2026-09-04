@@ -1,5 +1,12 @@
 <script setup lang="ts">
-import { mdiCartPlus, mdiClose, mdiDelete, mdiMagnify, mdiPlus } from '@mdi/js'
+import {
+  mdiCartPlus,
+  mdiCheckCircleOutline,
+  mdiClose,
+  mdiDelete,
+  mdiMagnify,
+  mdiPlus,
+} from '@mdi/js'
 import type { Category } from '~/types/state'
 import type { MaterializedPantryItem } from '~/stores/pantry'
 
@@ -306,6 +313,19 @@ onMounted(async () => {
                       <template #activator="{ props: tooltipProps }">
                         <v-btn
                           v-bind="tooltipProps"
+                          :icon="mdiCheckCircleOutline"
+                          color="success"
+                          variant="text"
+                          :disabled="uiStore.saving"
+                          @click="pantryStore.checkItem(materializedItem.item.id)"
+                        />
+                      </template>
+                      <span>{{ t('pantry.checkItem', { name: materializedItem.item.name }) }}</span>
+                    </v-tooltip>
+                    <v-tooltip location="bottom">
+                      <template #activator="{ props: tooltipProps }">
+                        <v-btn
+                          v-bind="tooltipProps"
                           :icon="mdiDelete"
                           color="error"
                           variant="text"
@@ -384,6 +404,21 @@ onMounted(async () => {
                               pantryStore.setNeedToBuy(materializedItem.item.id, $event ?? false)
                             "
                           />
+                          <v-tooltip location="bottom">
+                            <template #activator="{ props: tooltipProps }">
+                              <v-btn
+                                v-bind="tooltipProps"
+                                :icon="mdiCheckCircleOutline"
+                                color="success"
+                                variant="text"
+                                :disabled="uiStore.saving"
+                                @click="pantryStore.checkItem(materializedItem.item.id)"
+                              />
+                            </template>
+                            <span>{{
+                              t('pantry.checkItem', { name: materializedItem.item.name })
+                            }}</span>
+                          </v-tooltip>
                           <v-tooltip location="bottom">
                             <template #activator="{ props: tooltipProps }">
                               <v-btn

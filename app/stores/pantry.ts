@@ -72,6 +72,21 @@ export const usePantryStore = defineStore('pantry', () => {
     await updateFlags(itemId, { needToBuy })
   }
 
+  async function checkItem(itemId: string) {
+    if (!hasPantryItem(itemId)) return
+
+    const uiStore = useUIStore()
+    uiStore.setSaving(true)
+    pantryItems.value = pantryItems.value.map((pantryItem) =>
+      pantryItem.itemId === itemId
+        ? { ...pantryItem, updatedAt: new Date().toISOString() }
+        : pantryItem,
+    )
+
+    await persistAndSync()
+    uiStore.setSaving(false)
+  }
+
   function hydrateItems(items: Array<Partial<PantryItem>> = []) {
     const fallbackTimestamp = new Date().toISOString()
     pantryItems.value = items.map((pantryItem) => ({
@@ -203,6 +218,7 @@ export const usePantryStore = defineStore('pantry', () => {
     removeItem,
     setHaveAtHome,
     setNeedToBuy,
+    checkItem,
     completePurchasedItems,
     createShoppingList,
     updateItemId,

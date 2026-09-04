@@ -21,11 +21,31 @@ const exportDialog = ref(false)
 const selectedExportItemIds = ref<string[]>([])
 const exportListName = ref('')
 const creatingList = ref(false)
+const haveAtHomeFilter = ref('all')
+const needToBuyFilter = ref('all')
 
 const availableItems = computed(() =>
   itemStore.items
     .filter((item) => !pantryStore.hasPantryItem(item.id))
     .sort((a, b) => a.name.localeCompare(b.name)),
+)
+
+const filterOptions = computed(() => [
+  { title: t('pantry.filterAll'), value: 'all' },
+  { title: t('pantry.filterYes'), value: 'true' },
+  { title: t('pantry.filterNo'), value: 'false' },
+])
+
+const filteredPantryItems = computed(() =>
+  pantryStore.materializedPantryItems.filter(({ pantryItem }) => {
+    const matchesHaveAtHome =
+      haveAtHomeFilter.value === 'all' ||
+      pantryItem.haveAtHome === (haveAtHomeFilter.value === 'true')
+    const matchesNeedToBuy =
+      needToBuyFilter.value === 'all' || pantryItem.needToBuy === (needToBuyFilter.value === 'true')
+
+    return matchesHaveAtHome && matchesNeedToBuy
+  }),
 )
 
 function openExportDialog() {
@@ -96,6 +116,25 @@ onMounted(async () => {
           </v-btn>
         </div>
 
+        <div class="d-flex align-center ga-3 mb-4">
+          <v-select
+            v-model="haveAtHomeFilter"
+            :items="filterOptions"
+            :label="t('pantry.haveAtHomeFilter')"
+            variant="outlined"
+            density="comfortable"
+            hide-details
+          />
+          <v-select
+            v-model="needToBuyFilter"
+            :items="filterOptions"
+            :label="t('pantry.needToBuyFilter')"
+            variant="outlined"
+            density="comfortable"
+            hide-details
+          />
+        </div>
+
         <div class="d-flex justify-end mb-4">
           <v-btn
             color="primary"
@@ -118,9 +157,9 @@ onMounted(async () => {
         />
 
         <v-card v-else flat>
-          <v-list v-if="pantryStore.materializedPantryItems.length > 0" lines="two" class="px-0">
+          <v-list v-if="filteredPantryItems.length > 0" lines="two" class="px-0">
             <template
-              v-for="(materializedItem, index) in pantryStore.materializedPantryItems"
+              v-for="(materializedItem, index) in filteredPantryItems"
               :key="materializedItem.item.id"
             >
               <v-list-item>
@@ -162,12 +201,20 @@ onMounted(async () => {
                   </div>
                 </template>
               </v-list-item>
-              <v-divider v-if="index < pantryStore.materializedPantryItems.length - 1" />
+              <v-divider v-if="index < filteredPantryItems.length - 1" />
             </template>
           </v-list>
           <div v-else class="text-center py-12 text-medium-emphasis">
-            <p class="text-title-large mb-2">{{ t('pantry.emptyTitle') }}</p>
-            <p>{{ t('pantry.emptyDescription') }}</p>
+            <p class="text-title-large mb-2">
+              {{
+                pantryStore.materializedPantryItems.length > 0
+                  ? t('pantry.noMatchingItems')
+                  : t('pantry.emptyTitle')
+              }}
+            </p>
+            <p v-if="pantryStore.materializedPantryItems.length === 0">
+              {{ t('pantry.emptyDescription') }}
+            </p>
           </div>
         </v-card>
       </v-col>

@@ -6,6 +6,7 @@
     "refreshMessage": "This {platform} will reload in a few seconds."
   },
   "nav": {
+    "pantry": "Pantry",
     "manageLists": "Manage Lists",
     "manageCategories": "Manage Categories",
     "manageItems": "Manage Items",

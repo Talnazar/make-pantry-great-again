@@ -97,6 +97,7 @@ describe('Pantry store', () => {
     expect(store.pantryItemById('eggs')?.updatedAt).toMatch(
       /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
     )
+    expect(store.pantryItemById('eggs')?.staleAfterDays).toBe(7)
     expect(syncSharedStateMock).toHaveBeenCalledOnce()
   })
 
@@ -156,6 +157,7 @@ describe('Pantry store', () => {
     expect(store.pantryItemById('bananas')?.updatedAt).toMatch(
       /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
     )
+    expect(store.pantryItemById('bananas')?.staleAfterDays).toBe(7)
   })
 
   it('keeps the timestamp unchanged when purchased flags are already complete', () => {
@@ -166,6 +168,7 @@ describe('Pantry store', () => {
         haveAtHome: true,
         needToBuy: false,
         updatedAt: '2026-09-01T00:00:00.000Z',
+        staleAfterDays: 7,
       },
     ]
 
@@ -182,6 +185,7 @@ describe('Pantry store', () => {
     expect(store.pantryItemById('eggs')?.updatedAt).toMatch(
       /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
     )
+    expect(store.pantryItemById('eggs')?.staleAfterDays).toBe(7)
   })
 
   it('exports only selected items marked as need to buy without changing Pantry state', async () => {
@@ -212,12 +216,14 @@ describe('Pantry store', () => {
         haveAtHome: true,
         needToBuy: false,
         updatedAt: '2026-09-01T00:00:00.000Z',
+        staleAfterDays: 7,
       },
       {
         itemId: 'rice',
         haveAtHome: false,
         needToBuy: true,
         updatedAt: '2026-09-01T00:00:00.000Z',
+        staleAfterDays: 7,
       },
     ]
 
@@ -229,6 +235,7 @@ describe('Pantry store', () => {
       haveAtHome: true,
       needToBuy: false,
       updatedAt: '2026-09-01T00:00:00.000Z',
+      staleAfterDays: 7,
     })
 
     store.removeItemReference('milk')

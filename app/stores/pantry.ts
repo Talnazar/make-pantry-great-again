@@ -46,6 +46,7 @@ export const usePantryStore = defineStore('pantry', () => {
         haveAtHome: false,
         needToBuy: false,
         updatedAt: new Date().toISOString(),
+        staleAfterDays: 7,
       },
     ]
 
@@ -94,6 +95,7 @@ export const usePantryStore = defineStore('pantry', () => {
       haveAtHome: pantryItem.haveAtHome ?? false,
       needToBuy: pantryItem.needToBuy ?? false,
       updatedAt: pantryItem.updatedAt ?? fallbackTimestamp,
+      staleAfterDays: pantryItem.staleAfterDays ?? 7,
     }))
   }
 
@@ -124,6 +126,7 @@ export const usePantryStore = defineStore('pantry', () => {
         haveAtHome: true,
         needToBuy: false,
         updatedAt: new Date().toISOString(),
+        staleAfterDays: 7,
       }))
 
     if (newPantryItems.length > 0) {

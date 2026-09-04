@@ -46,6 +46,7 @@ export type PantryItem = {
   haveAtHome: boolean
   needToBuy: boolean
   updatedAt: string
+  staleAfterDays: number
 }
 
 export interface MaterializedListItem {

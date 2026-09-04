@@ -126,11 +126,10 @@ function formatLastChecked(updatedAt: string): string {
   return Number.isNaN(date.getTime()) ? '' : dateFormatter.format(date)
 }
 
-const STALE_AFTER_MS = 7 * 24 * 60 * 60 * 1000
-
-function isStale(updatedAt: string): boolean {
+function isStale(updatedAt: string, staleAfterDays: number): boolean {
   const timestamp = new Date(updatedAt).getTime()
-  return !Number.isNaN(timestamp) && Date.now() - timestamp > STALE_AFTER_MS
+  const staleAfterMs = staleAfterDays * 24 * 60 * 60 * 1000
+  return !Number.isNaN(timestamp) && Date.now() - timestamp > staleAfterMs
 }
 
 function openExportDialog() {
@@ -272,7 +271,10 @@ onMounted(async () => {
             >
               <v-list-item
                 :class="{
-                  'pantry-item-stale': isStale(materializedItem.pantryItem.updatedAt),
+                  'pantry-item-stale': isStale(
+                    materializedItem.pantryItem.updatedAt,
+                    materializedItem.pantryItem.staleAfterDays,
+                  ),
                 }"
               >
                 <v-list-item-title>{{ materializedItem.item.name }}</v-list-item-title>
@@ -283,7 +285,12 @@ onMounted(async () => {
                     })
                   }}
                   <span
-                    v-if="isStale(materializedItem.pantryItem.updatedAt)"
+                    v-if="
+                      isStale(
+                        materializedItem.pantryItem.updatedAt,
+                        materializedItem.pantryItem.staleAfterDays,
+                      )
+                    "
                     class="text-warning ml-2"
                   >
                     {{ t('pantry.staleItem') }}
@@ -367,7 +374,10 @@ onMounted(async () => {
                   >
                     <v-list-item
                       :class="{
-                        'pantry-item-stale': isStale(materializedItem.pantryItem.updatedAt),
+                        'pantry-item-stale': isStale(
+                          materializedItem.pantryItem.updatedAt,
+                          materializedItem.pantryItem.staleAfterDays,
+                        ),
                       }"
                     >
                       <v-list-item-title>{{ materializedItem.item.name }}</v-list-item-title>
@@ -378,7 +388,12 @@ onMounted(async () => {
                           })
                         }}
                         <span
-                          v-if="isStale(materializedItem.pantryItem.updatedAt)"
+                          v-if="
+                            isStale(
+                              materializedItem.pantryItem.updatedAt,
+                              materializedItem.pantryItem.staleAfterDays,
+                            )
+                          "
                           class="text-warning ml-2"
                         >
                           {{ t('pantry.staleItem') }}

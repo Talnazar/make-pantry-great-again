@@ -109,6 +109,16 @@ function categoryClass(category: Category): string {
   return `text-${category.color || 'teal'}`
 }
 
+const dateFormatter = new Intl.DateTimeFormat(undefined, {
+  dateStyle: 'medium',
+  timeStyle: 'short',
+})
+
+function formatLastChecked(updatedAt: string): string {
+  const date = new Date(updatedAt)
+  return Number.isNaN(date.getTime()) ? '' : dateFormatter.format(date)
+}
+
 function openExportDialog() {
   selectedExportItemIds.value = pantryStore.itemsToBuy.map(({ pantryItem }) => pantryItem.itemId)
   const today = new Date()
@@ -248,6 +258,13 @@ onMounted(async () => {
             >
               <v-list-item>
                 <v-list-item-title>{{ materializedItem.item.name }}</v-list-item-title>
+                <v-list-item-subtitle>
+                  {{
+                    t('pantry.lastChecked', {
+                      date: formatLastChecked(materializedItem.pantryItem.updatedAt),
+                    })
+                  }}
+                </v-list-item-subtitle>
                 <template #append>
                   <div class="d-flex align-center ga-2">
                     <v-checkbox
@@ -313,6 +330,13 @@ onMounted(async () => {
                   >
                     <v-list-item>
                       <v-list-item-title>{{ materializedItem.item.name }}</v-list-item-title>
+                      <v-list-item-subtitle>
+                        {{
+                          t('pantry.lastChecked', {
+                            date: formatLastChecked(materializedItem.pantryItem.updatedAt),
+                          })
+                        }}
+                      </v-list-item-subtitle>
                       <template #append>
                         <div class="d-flex align-center ga-2">
                           <v-checkbox

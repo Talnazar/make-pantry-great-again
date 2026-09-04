@@ -32,8 +32,21 @@ const listStore = {
     }>
   }>,
   persistToLocalStorage: persistToLocalStorageMock,
-  async upsertList(request: { id: string; name: string; icon: string }) {
-    this.lists.push({ ...request, cartPanelOpen: true, items: [] })
+  async createListWithItems(
+    request: { id: string; name: string; icon: string },
+    itemIds: string[],
+  ) {
+    this.lists.push({
+      ...request,
+      cartPanelOpen: true,
+      items: itemIds.map((itemId) => ({
+        itemId,
+        notes: '',
+        addedToCart: false,
+        quantity: 1,
+      })),
+    })
+    return request.id
   },
   listById(listId: string) {
     return this.lists.find((list) => list.id === listId)

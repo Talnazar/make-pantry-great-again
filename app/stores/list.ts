@@ -401,6 +401,27 @@ export const useListStore = defineStore('list', () => {
     uiStore.setSaving(false)
   }
 
+  async function createListWithItems(request: UpsertListRequest, itemIds: string[]) {
+    await upsertList(request)
+
+    const list = listById(request.id)
+    if (!list) return undefined
+
+    list.items.push(
+      ...itemIds.map((itemId): ListItem => ({
+        itemId,
+        notes: '',
+        addedToCart: false,
+        quantity: 1,
+      })),
+    )
+    lists.value = [...lists.value]
+    persistToLocalStorage()
+    await syncSharedState({ lists: lists.value })
+
+    return list.id
+  }
+
   async function deleteList(listId: string) {
     const uiStore = useUIStore()
 
@@ -784,6 +805,7 @@ export const useListStore = defineStore('list', () => {
     loadStateFromStore,
     setDefaultItems,
     upsertList,
+    createListWithItems,
     deleteList,
     setSelectedListId,
     setTitleByListId,

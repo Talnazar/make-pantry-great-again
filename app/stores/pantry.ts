@@ -1,4 +1,4 @@
-import type { Item, ListItem, PantryItem } from '~/types/state'
+import type { Item, PantryItem } from '~/types/state'
 
 export interface MaterializedPantryItem {
   item: Item
@@ -71,7 +71,6 @@ export const usePantryStore = defineStore('pantry', () => {
     await updateFlags(itemId, { needToBuy })
   }
 
-  // Todo : split the method, part of it move to the list store.
   async function createShoppingList(itemIds: string[], name: string = 'Pantry Shopping List') {
     const selectedIds = new Set(itemIds)
     // Todo : I dont think we need to filter it again and we can assume that the input alreay have only need to buy.
@@ -83,27 +82,14 @@ export const usePantryStore = defineStore('pantry', () => {
 
     const listStore = useListStore()
     const listId = crypto.randomUUID()
-    await listStore.upsertList({
-      id: listId,
-      name: name.trim() || 'Pantry Shopping List',
-      icon: 'list',
-    })
-
-    const list = listStore.listById(listId)
-    if (!list) return undefined
-
-    const listItems: ListItem[] = exportItems.map(({ pantryItem }) => ({
-      itemId: pantryItem.itemId,
-      notes: '',
-      addedToCart: false,
-      quantity: 1,
-    }))
-    list.items.push(...listItems)
-    listStore.lists = [...listStore.lists]
-    listStore.persistToLocalStorage()
-    await syncSharedState({ lists: listStore.lists })
-
-    return listId
+    return listStore.createListWithItems(
+      {
+        id: listId,
+        name: name.trim() || 'Pantry Shopping List',
+        icon: 'list',
+      },
+      exportItems.map(({ pantryItem }) => pantryItem.itemId),
+    )
   }
 
   function updateItemId(oldItemId: string, newItemId: string): boolean {

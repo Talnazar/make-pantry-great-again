@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { mdiCartPlus, mdiClose, mdiDelete, mdiPlus } from '@mdi/js'
+import { mdiCartPlus, mdiClose, mdiDelete, mdiMagnify, mdiPlus } from '@mdi/js'
 import type { Category } from '~/types/state'
 import type { MaterializedPantryItem } from '~/stores/pantry'
 
@@ -27,6 +27,7 @@ const haveAtHomeFilter = ref('all')
 const needToBuyFilter = ref('all')
 const sortOption = ref('nameAsc')
 const groupByCategory = ref(false)
+const searchQuery = ref('')
 const categoryStore = useCategoryStore()
 
 const availableItems = computed(() =>
@@ -42,14 +43,16 @@ const filterOptions = computed(() => [
 ])
 
 const filteredPantryItems = computed(() =>
-  pantryStore.materializedPantryItems.filter(({ pantryItem }) => {
+  pantryStore.materializedPantryItems.filter(({ item, pantryItem }) => {
+    const query = searchQuery.value.trim().toLowerCase()
+    const matchesSearch = query === '' || item.name.toLowerCase().includes(query)
     const matchesHaveAtHome =
       haveAtHomeFilter.value === 'all' ||
       pantryItem.haveAtHome === (haveAtHomeFilter.value === 'true')
     const matchesNeedToBuy =
       needToBuyFilter.value === 'all' || pantryItem.needToBuy === (needToBuyFilter.value === 'true')
 
-    return matchesHaveAtHome && matchesNeedToBuy
+    return matchesSearch && matchesHaveAtHome && matchesNeedToBuy
   }),
 )
 
@@ -134,6 +137,15 @@ onMounted(async () => {
     <v-row>
       <v-col cols="12" lg="6" md="8" offset-md="2" offset-lg="3">
         <div class="d-flex align-center ga-3 mb-4">
+          <v-text-field
+            v-model="searchQuery"
+            :prepend-inner-icon="mdiMagnify"
+            :placeholder="t('pantry.searchItems')"
+            variant="solo-inverted"
+            density="compact"
+            color="primary"
+            hide-details
+          />
           <v-select
             v-model="selectedCatalogItemId"
             :items="availableItems"

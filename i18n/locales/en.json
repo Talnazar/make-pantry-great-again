@@ -48,6 +48,7 @@
     "title": "Pantry",
     "addItem": "Add Item",
     "chooseCatalogItem": "Choose an item from the catalog",
+    "searchItems": "Search pantry items",
     "createShoppingList": "Create shopping list",
     "listName": "List name",
     "defaultListName": "Pantry Shopping List",

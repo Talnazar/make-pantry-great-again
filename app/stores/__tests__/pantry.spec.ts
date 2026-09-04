@@ -1,0 +1,140 @@
+import { createPinia, defineStore, setActivePinia } from 'pinia'
+import { computed, ref } from 'vue'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+const { syncSharedStateMock, persistToLocalStorageMock } = vi.hoisted(() => ({
+  syncSharedStateMock: vi.fn(),
+  persistToLocalStorageMock: vi.fn(),
+}))
+
+const itemStore = {
+  items: [
+    { id: 'eggs', name: 'Eggs', unit: null, categoryId: 'food' },
+    { id: 'rice', name: 'Rice', unit: null, categoryId: 'food' },
+    { id: 'milk', name: 'Milk', unit: null, categoryId: 'food' },
+  ],
+  findItemById(itemId: string) {
+    return this.items.find((item) => item.id === itemId)
+  },
+}
+
+const listStore = {
+  lists: [] as Array<{
+    id: string
+    name: string
+    icon: string
+    cartPanelOpen: boolean
+    items: Array<{
+      itemId: string
+      notes: string
+      addedToCart: boolean
+      quantity: number
+    }>
+  }>,
+  persistToLocalStorage: persistToLocalStorageMock,
+  async upsertList(request: { id: string; name: string; icon: string }) {
+    this.lists.push({ ...request, cartPanelOpen: true, items: [] })
+  },
+  listById(listId: string) {
+    return this.lists.find((list) => list.id === listId)
+  },
+}
+
+const uiStore = {
+  saving: false,
+  setSaving(value: boolean) {
+    this.saving = value
+  },
+}
+
+vi.stubGlobal('defineStore', defineStore)
+vi.stubGlobal('ref', ref)
+vi.stubGlobal('computed', computed)
+vi.stubGlobal('syncSharedState', syncSharedStateMock)
+vi.stubGlobal('useItemStore', () => itemStore)
+vi.stubGlobal('useListStore', () => listStore)
+vi.stubGlobal('useUIStore', () => uiStore)
+vi.stubGlobal('crypto', { randomUUID: () => 'pantry-list-id' })
+
+const { usePantryStore } = await import('../pantry')
+
+describe('Pantry store', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    listStore.lists = []
+    uiStore.saving = false
+    syncSharedStateMock.mockReset()
+    persistToLocalStorageMock.mockReset()
+  })
+
+  it('adds valid catalog items and prevents duplicates', async () => {
+    const store = usePantryStore()
+
+    await store.addItem('eggs')
+    await store.addItem('eggs')
+    await store.addItem('missing')
+
+    expect(store.pantryItems).toEqual([{ itemId: 'eggs', haveAtHome: false, needToBuy: false }])
+    expect(syncSharedStateMock).toHaveBeenCalledOnce()
+  })
+
+  it('keeps have-at-home and need-to-buy flags independent', async () => {
+    const store = usePantryStore()
+    await store.addItem('eggs')
+
+    await store.setHaveAtHome('eggs', true)
+    expect(store.pantryItemById('eggs')).toMatchObject({
+      haveAtHome: true,
+      needToBuy: false,
+    })
+
+    await store.setNeedToBuy('eggs', true)
+    expect(store.pantryItemById('eggs')).toMatchObject({
+      haveAtHome: true,
+      needToBuy: true,
+    })
+
+    await store.setHaveAtHome('eggs', false)
+    expect(store.pantryItemById('eggs')).toMatchObject({
+      haveAtHome: false,
+      needToBuy: true,
+    })
+  })
+
+  it('exports only selected items marked as need to buy without changing Pantry state', async () => {
+    const store = usePantryStore()
+    await store.addItem('eggs')
+    await store.addItem('rice')
+    await store.setNeedToBuy('eggs', true)
+    await store.setNeedToBuy('rice', true)
+    const pantryBeforeExport = store.pantryItems.map((pantryItem) => ({ ...pantryItem }))
+
+    const listId = await store.createShoppingList(['eggs'])
+
+    expect(listId).toBe('pantry-list-id')
+    expect(listStore.listById('pantry-list-id')?.items).toEqual([
+      { itemId: 'eggs', notes: '', addedToCart: false, quantity: 1 },
+    ])
+    expect(store.pantryItems).toEqual(pantryBeforeExport)
+  })
+
+  it('updates and removes catalog references', () => {
+    const store = usePantryStore()
+    store.pantryItems = [
+      { itemId: 'eggs', haveAtHome: true, needToBuy: false },
+      { itemId: 'rice', haveAtHome: false, needToBuy: true },
+    ]
+
+    expect(store.updateItemId('eggs', 'milk')).toBe(true)
+    expect(store.updateItemId('rice', 'milk')).toBe(false)
+    expect(store.updateItemId('missing', 'new-item')).toBe(false)
+    expect(store.pantryItemById('milk')).toEqual({
+      itemId: 'milk',
+      haveAtHome: true,
+      needToBuy: false,
+    })
+
+    store.removeItemReference('milk')
+    expect(store.pantryItemById('milk')).toBeUndefined()
+  })
+})

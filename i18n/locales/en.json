@@ -44,6 +44,18 @@
     "synchronize": "Synchronize",
     "syncSuccess": "Items have been synchronized successfully"
   },
+  "pantry": {
+    "title": "Pantry",
+    "addItem": "Add Item",
+    "chooseCatalogItem": "Choose an item from the catalog",
+    "createShoppingList": "Create shopping list",
+    "haveAtHome": "Have at home",
+    "needToBuy": "Need to buy",
+    "removeItem": "Remove {name}",
+    "emptyTitle": "Your pantry is empty",
+    "emptyDescription": "Add an item from the catalog to get started.",
+    "reviewDescription": "Select the items to include in this shopping list."
+  },
   "category": {
     "addCategory": "Add Category",
     "editCategory": "Edit Category",

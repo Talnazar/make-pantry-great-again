@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { mdiCartPlus, mdiClose, mdiDelete, mdiPlus } from '@mdi/js'
 
+const { t } = useI18n()
 const listStore = useListStore()
 const itemStore = useItemStore()
 const pantryStore = usePantryStore()
@@ -8,7 +9,7 @@ const uiStore = useUIStore()
 const localePath = useLocalePath()
 
 useHead({
-  title: 'Pantry',
+  title: () => t('pantry.title'),
 })
 
 definePageMeta({
@@ -55,7 +56,7 @@ async function createShoppingList() {
 
 onMounted(async () => {
   await listStore.loadState()
-  uiStore.setTitle('Pantry')
+  uiStore.setTitle(t('pantry.title'))
 })
 </script>
 
@@ -69,8 +70,8 @@ onMounted(async () => {
             :items="availableItems"
             item-title="name"
             item-value="id"
-            label="Add an item"
-            placeholder="Choose an item from the catalog"
+            :label="t('pantry.addItem')"
+            :placeholder="t('pantry.chooseCatalogItem')"
             variant="outlined"
             density="comfortable"
             hide-details
@@ -82,7 +83,7 @@ onMounted(async () => {
             @click="addSelectedItem"
           >
             <v-icon start :icon="mdiPlus" />
-            Add
+            {{ t('pantry.addItem') }}
           </v-btn>
         </div>
 
@@ -94,7 +95,7 @@ onMounted(async () => {
             @click="openExportDialog"
           >
             <v-icon start :icon="mdiCartPlus" />
-            Create shopping list
+            {{ t('pantry.createShoppingList') }}
           </v-btn>
         </div>
 
@@ -119,7 +120,7 @@ onMounted(async () => {
                   <div class="d-flex align-center ga-2">
                     <v-checkbox
                       :model-value="materializedItem.pantryItem.haveAtHome"
-                      label="Have at home"
+                      :label="t('pantry.haveAtHome')"
                       hide-details
                       color="primary"
                       @update:model-value="
@@ -128,7 +129,7 @@ onMounted(async () => {
                     />
                     <v-checkbox
                       :model-value="materializedItem.pantryItem.needToBuy"
-                      label="Need to buy"
+                      :label="t('pantry.needToBuy')"
                       hide-details
                       color="primary"
                       @update:model-value="
@@ -145,7 +146,9 @@ onMounted(async () => {
                           @click="pantryStore.removeItem(materializedItem.item.id)"
                         />
                       </template>
-                      <span>Remove {{ materializedItem.item.name }}</span>
+                      <span>{{
+                        t('pantry.removeItem', { name: materializedItem.item.name })
+                      }}</span>
                     </v-tooltip>
                   </div>
                 </template>
@@ -154,8 +157,8 @@ onMounted(async () => {
             </template>
           </v-list>
           <div v-else class="text-center py-12 text-medium-emphasis">
-            <p class="text-title-large mb-2">Your pantry is empty</p>
-            <p>Add an item from the catalog to get started.</p>
+            <p class="text-title-large mb-2">{{ t('pantry.emptyTitle') }}</p>
+            <p>{{ t('pantry.emptyDescription') }}</p>
           </div>
         </v-card>
       </v-col>
@@ -164,7 +167,7 @@ onMounted(async () => {
     <v-dialog v-model="exportDialog" max-width="520">
       <v-card>
         <v-card-title class="d-flex align-center">
-          Create shopping list
+          {{ t('pantry.createShoppingList') }}
           <v-spacer />
           <v-btn
             :icon="mdiClose"
@@ -175,7 +178,7 @@ onMounted(async () => {
           />
         </v-card-title>
         <v-card-text>
-          <p class="mb-3">Select the items to include in this shopping list.</p>
+          <p class="mb-3">{{ t('pantry.reviewDescription') }}</p>
           <v-checkbox
             v-for="materializedItem in pantryStore.itemsToBuy"
             :key="materializedItem.item.id"
@@ -194,10 +197,12 @@ onMounted(async () => {
             :loading="creatingList"
             @click="createShoppingList"
           >
-            Create list
+            {{ t('list.createList') }}
           </v-btn>
           <v-spacer />
-          <v-btn color="warning" variant="text" @click="closeExportDialog">Cancel</v-btn>
+          <v-btn color="warning" variant="text" @click="closeExportDialog">
+            {{ t('common.cancel') }}
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>

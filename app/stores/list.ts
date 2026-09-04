@@ -673,11 +673,18 @@ export const useListStore = defineStore('list', () => {
     uiStore.setSaving(false)
   }
 
-  async function emptyCartItems(listId: string) {
+  async function finishAndClearCart(listId: string) {
     const uiStore = useUIStore()
+    const pantryStore = usePantryStore()
 
     const listIndex = lists.value.findIndex((l) => l.id === listId)
     if (listIndex !== -1) {
+      const cartItemIds = lists.value[listIndex]!.items.filter(
+        (li: ListItem) => li.addedToCart,
+      ).map((li: ListItem) => li.itemId)
+
+      await pantryStore.markItemsAsBought(cartItemIds)
+
       lists.value[listIndex]!.items = lists.value[listIndex]!.items.filter(
         (li: ListItem) => !li.addedToCart,
       )
@@ -687,7 +694,7 @@ export const useListStore = defineStore('list', () => {
     persistToLocalStorage()
 
     uiStore.setSaving(true)
-    await syncSharedState({ lists: lists.value })
+    await syncSharedState({ lists: lists.value, pantryItems: pantryStore.pantryItems })
 
     uiStore.addNotification({
       type: 'info',
@@ -814,7 +821,7 @@ export const useListStore = defineStore('list', () => {
     deleteListItem,
     addToCart,
     removeFromCart,
-    emptyCartItems,
+    finishAndClearCart,
     toggleCartPanel,
     sanitizeState,
     saveState,

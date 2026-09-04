@@ -71,6 +71,22 @@ export const usePantryStore = defineStore('pantry', () => {
     await updateFlags(itemId, { needToBuy })
   }
 
+  async function markItemsAsBought(itemIds: string[]) {
+    const itemIdsToUpdate = new Set(itemIds)
+    if (!pantryItems.value.some((pantryItem) => itemIdsToUpdate.has(pantryItem.itemId))) return
+
+    const uiStore = useUIStore()
+    uiStore.setSaving(true)
+    pantryItems.value = pantryItems.value.map((pantryItem) =>
+      itemIdsToUpdate.has(pantryItem.itemId)
+        ? { ...pantryItem, haveAtHome: true, needToBuy: false }
+        : pantryItem,
+    )
+
+    await persistAndSync()
+    uiStore.setSaving(false)
+  }
+
   async function createShoppingList(itemIds: string[], name?: string) {
     const selectedIds = new Set(itemIds)
     // Todo : I dont think we need to filter it again and we can assume that the input alreay have only need to buy.
@@ -148,6 +164,7 @@ export const usePantryStore = defineStore('pantry', () => {
     removeItem,
     setHaveAtHome,
     setNeedToBuy,
+    markItemsAsBought,
     createShoppingList,
     updateItemId,
     removeItemReference,

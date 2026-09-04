@@ -172,8 +172,8 @@ function onSelect(item: SelectItem) {
   resetInput()
 }
 
-function onClearCart() {
-  listStore.emptyCartItems(listStore.selectedList.id)
+function onFinishAndClearCart() {
+  listStore.finishAndClearCart(listStore.selectedList.id)
 }
 
 function onSave() {
@@ -378,7 +378,7 @@ onMounted(async () => {
                   density="compact"
                   :prepend-icon="mdiNotificationClearAll"
                   @click.stop.prevent
-                  @click="onClearCart"
+                  @click="onFinishAndClearCart"
                 >
                   {{ $t('list.clearCart') }}
                 </v-btn>

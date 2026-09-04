@@ -69,6 +69,7 @@
     "haveAtHome": "Have at home",
     "needToBuy": "Need to buy",
     "lastChecked": "Last checked: {date}",
+    "staleItem": "Stale item",
     "removeItem": "Remove {name}",
     "emptyTitle": "Your pantry is empty",
     "emptyDescription": "Add an item from the catalog to get started.",

@@ -12,6 +12,7 @@ vi.mock('firebase/firestore', () => ({
 }))
 
 const itemStore = { items: [] }
+const pantryStore = { pantryItems: [] }
 const categoryStore = { categories: [] }
 const settingsStore = { currency: 'USD' }
 const uiStore = {
@@ -31,6 +32,7 @@ vi.stubGlobal(
   vi.fn(() => 'state-doc'),
 )
 vi.stubGlobal('useItemStore', () => itemStore)
+vi.stubGlobal('usePantryStore', () => pantryStore)
 vi.stubGlobal('useCategoryStore', () => categoryStore)
 vi.stubGlobal('useSettingsStore', () => settingsStore)
 vi.stubGlobal('useUIStore', () => uiStore)

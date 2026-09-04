@@ -175,6 +175,7 @@ export const useListStore = defineStore('list', () => {
 
     try {
       const itemStore = useItemStore()
+      const pantryStore = usePantryStore()
       const categoryStore = useCategoryStore()
       const uiStore = useUIStore()
       const settingsStore = useSettingsStore()
@@ -185,6 +186,7 @@ export const useListStore = defineStore('list', () => {
         stateLoaded: stateLoaded.value,
         loadingState: loadingState.value,
         items: itemStore.items,
+        pantryItems: pantryStore.pantryItems,
         categories: categoryStore.categories,
         currency: settingsStore.currency,
         loading: uiStore.loading,
@@ -205,6 +207,7 @@ export const useListStore = defineStore('list', () => {
     if (!stateLoaded.value) return
 
     const itemStore = useItemStore()
+    const pantryStore = usePantryStore()
     const categoryStore = useCategoryStore()
     const settingsStore = useSettingsStore()
 
@@ -212,6 +215,7 @@ export const useListStore = defineStore('list', () => {
       lists: lists.value,
       selectedListId: selectedListId.value,
       items: itemStore.items,
+      pantryItems: pantryStore.pantryItems,
       categories: categoryStore.categories,
       currency: settingsStore.currency,
     })
@@ -221,6 +225,7 @@ export const useListStore = defineStore('list', () => {
 
   function _hydrateStores(data: DocumentData, opts: { useNavDrawerFromData?: boolean } = {}) {
     const itemStore = useItemStore()
+    const pantryStore = usePantryStore()
     const categoryStore = useCategoryStore()
     const settingsStore = useSettingsStore()
     const uiStore = useUIStore()
@@ -229,6 +234,7 @@ export const useListStore = defineStore('list', () => {
     selectedListId.value = data.selectedListId ?? selectedListId.value
     categoryStore.categories = data.categories ?? [{ ...DEFAULT_CATEGORY }]
     itemStore.items = data.items ?? itemStore.items
+    pantryStore.pantryItems = data.pantryItems ?? pantryStore.pantryItems
     settingsStore.currency = data.currency ?? settingsStore.currency
 
     if (opts.useNavDrawerFromData) {
@@ -283,10 +289,12 @@ export const useListStore = defineStore('list', () => {
 
       const categoryStore = useCategoryStore()
       const itemStore = useItemStore()
+      const pantryStore = usePantryStore()
       await syncSharedState({
         lists: lists.value,
         categories: categoryStore.categories,
         items: itemStore.items,
+        pantryItems: pantryStore.pantryItems,
         currency: settingsStore.currency,
         selectedListId: selectedListId.value,
       })
@@ -303,6 +311,7 @@ export const useListStore = defineStore('list', () => {
     try {
       const state = JSON.parse(localStorage.getItem(COLLECTION_STATE) ?? '')
       const itemStore = useItemStore()
+      const pantryStore = usePantryStore()
       const categoryStore = useCategoryStore()
       const settingsStore = useSettingsStore()
       const uiStore = useUIStore()
@@ -310,6 +319,7 @@ export const useListStore = defineStore('list', () => {
       lists.value = state?.lists ?? lists.value
       categoryStore.categories = state?.categories ?? [{ ...DEFAULT_CATEGORY }]
       itemStore.items = state?.items ?? itemStore.items
+      pantryStore.pantryItems = state?.pantryItems ?? pantryStore.pantryItems
       settingsStore.currency = state?.currency ?? settingsStore.currency
       selectedListId.value = state?.selectedListId ?? selectedListId.value
       uiStore.navDrawerOpen = (state?.navDrawerOpen ?? uiStore.navDrawerOpen) && !isMobile()
@@ -708,12 +718,14 @@ export const useListStore = defineStore('list', () => {
 
     const categoryStore = useCategoryStore()
     const itemStore = useItemStore()
+    const pantryStore = usePantryStore()
     const uiStore = useUIStore()
 
     lists.value = []
     selectedListId.value = ''
     categoryStore.categories = [{ ...DEFAULT_CATEGORY }]
     itemStore.items = []
+    pantryStore.pantryItems = []
     stateLoaded.value = false
     uiStore.navDrawerOpen = false
 

@@ -108,6 +108,7 @@ export interface State {
   selectedListId: string
   lists: Array<List>
   items: Array<Item>
+  pantryItems: Array<PantryItem>
   currency: string
   notification: Notification
   navDrawerOpen: boolean

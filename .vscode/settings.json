@@ -27,5 +27,12 @@
   // user setting (e.g. a stale "prettier.configPath": ".prettierrc") that would
   // otherwise fail to load and silently disable format-on-save.
   "prettier.configPath": ".prettierrc.json",
-  "eslint.workingDirectories": [{ "mode": "auto" }]
+  "eslint.workingDirectories": [
+    {
+      "mode": "auto"
+    }
+  ],
+  "chat.tools.terminal.autoApprove": {
+    "pnpm": true
+  }
 }

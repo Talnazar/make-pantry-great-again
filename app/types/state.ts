@@ -41,6 +41,14 @@ export type ListItem = {
   quantity: number
 }
 
+export type PantryItem = {
+  itemId: string
+  haveAtHome: boolean
+  needToBuy: boolean
+  updatedAt: string
+  staleAfterDays: number
+}
+
 export interface MaterializedListItem {
   item: Item
   listItem: ListItem
@@ -102,6 +110,7 @@ export interface State {
   selectedListId: string
   lists: Array<List>
   items: Array<Item>
+  pantryItems: Array<PantryItem>
   currency: string
   notification: Notification
   navDrawerOpen: boolean

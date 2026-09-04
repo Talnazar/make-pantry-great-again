@@ -2,8 +2,9 @@ import { createPinia, defineStore, setActivePinia } from 'pinia'
 import { computed, ref } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const { syncSharedStateMock } = vi.hoisted(() => ({
+const { syncSharedStateMock, completePurchasedItemsMock } = vi.hoisted(() => ({
   syncSharedStateMock: vi.fn(),
+  completePurchasedItemsMock: vi.fn(),
 }))
 
 vi.mock('firebase/firestore', () => ({
@@ -12,6 +13,7 @@ vi.mock('firebase/firestore', () => ({
 }))
 
 const itemStore = { items: [] }
+const pantryStore = { pantryItems: [], completePurchasedItems: completePurchasedItemsMock }
 const categoryStore = { categories: [] }
 const settingsStore = { currency: 'USD' }
 const uiStore = {
@@ -20,6 +22,8 @@ const uiStore = {
   title: '',
   notification: {},
   navDrawerOpen: true,
+  setSaving: vi.fn(),
+  addNotification: vi.fn(),
 }
 
 vi.stubGlobal('defineStore', defineStore)
@@ -31,6 +35,7 @@ vi.stubGlobal(
   vi.fn(() => 'state-doc'),
 )
 vi.stubGlobal('useItemStore', () => itemStore)
+vi.stubGlobal('usePantryStore', () => pantryStore)
 vi.stubGlobal('useCategoryStore', () => categoryStore)
 vi.stubGlobal('useSettingsStore', () => settingsStore)
 vi.stubGlobal('useUIStore', () => uiStore)
@@ -41,6 +46,7 @@ describe('List store Firestore persistence', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     syncSharedStateMock.mockReset()
+    completePurchasedItemsMock.mockReset()
     localStorage.clear()
   })
 
@@ -52,5 +58,33 @@ describe('List store Firestore persistence', () => {
 
     const payload = syncSharedStateMock.mock.calls[0]![0]
     expect(payload).not.toHaveProperty('navDrawerOpen')
+  })
+
+  it('finishes cart items in Pantry before removing them from the list', async () => {
+    const store = useListStore()
+    store.lists = [
+      {
+        id: 'list-1',
+        name: 'Shopping List',
+        icon: 'list',
+        cartPanelOpen: true,
+        items: [
+          { itemId: 'milk', notes: '', addedToCart: true, quantity: 1 },
+          { itemId: 'bananas', notes: '', addedToCart: true, quantity: 1 },
+          { itemId: 'eggs', notes: '', addedToCart: false, quantity: 1 },
+        ],
+      },
+    ]
+
+    await store.finishAndClearCart('list-1')
+
+    expect(completePurchasedItemsMock).toHaveBeenCalledWith(['milk', 'bananas'], [])
+    expect(store.listById('list-1')?.items).toEqual([
+      { itemId: 'eggs', notes: '', addedToCart: false, quantity: 1 },
+    ])
+    expect(syncSharedStateMock).toHaveBeenLastCalledWith({
+      lists: store.lists,
+      pantryItems: pantryStore.pantryItems,
+    })
   })
 })

@@ -84,6 +84,13 @@ export const useListStore = defineStore('list', () => {
     return lists.value.find((list: List) => list.id === listId)
   }
 
+  function cartItemIds(listId: string): string[] {
+    const list = listById(listId)
+    if (!list) return []
+
+    return [...new Set(list.items.filter((li) => li.addedToCart).map((li) => li.itemId))]
+  }
+
   function listIcon(name: string): string {
     if (LIST_ICONS.has(name)) {
       return LIST_ICONS.get(name)!
@@ -175,6 +182,7 @@ export const useListStore = defineStore('list', () => {
 
     try {
       const itemStore = useItemStore()
+      const pantryStore = usePantryStore()
       const categoryStore = useCategoryStore()
       const uiStore = useUIStore()
       const settingsStore = useSettingsStore()
@@ -185,6 +193,7 @@ export const useListStore = defineStore('list', () => {
         stateLoaded: stateLoaded.value,
         loadingState: loadingState.value,
         items: itemStore.items,
+        pantryItems: pantryStore.pantryItems,
         categories: categoryStore.categories,
         currency: settingsStore.currency,
         loading: uiStore.loading,
@@ -205,6 +214,7 @@ export const useListStore = defineStore('list', () => {
     if (!stateLoaded.value) return
 
     const itemStore = useItemStore()
+    const pantryStore = usePantryStore()
     const categoryStore = useCategoryStore()
     const settingsStore = useSettingsStore()
 
@@ -212,6 +222,7 @@ export const useListStore = defineStore('list', () => {
       lists: lists.value,
       selectedListId: selectedListId.value,
       items: itemStore.items,
+      pantryItems: pantryStore.pantryItems,
       categories: categoryStore.categories,
       currency: settingsStore.currency,
     })
@@ -221,6 +232,7 @@ export const useListStore = defineStore('list', () => {
 
   function _hydrateStores(data: DocumentData, opts: { useNavDrawerFromData?: boolean } = {}) {
     const itemStore = useItemStore()
+    const pantryStore = usePantryStore()
     const categoryStore = useCategoryStore()
     const settingsStore = useSettingsStore()
     const uiStore = useUIStore()
@@ -229,6 +241,9 @@ export const useListStore = defineStore('list', () => {
     selectedListId.value = data.selectedListId ?? selectedListId.value
     categoryStore.categories = data.categories ?? [{ ...DEFAULT_CATEGORY }]
     itemStore.items = data.items ?? itemStore.items
+    if (data.pantryItems !== undefined) {
+      pantryStore.hydrateItems(data.pantryItems)
+    }
     settingsStore.currency = data.currency ?? settingsStore.currency
 
     if (opts.useNavDrawerFromData) {
@@ -283,10 +298,12 @@ export const useListStore = defineStore('list', () => {
 
       const categoryStore = useCategoryStore()
       const itemStore = useItemStore()
+      const pantryStore = usePantryStore()
       await syncSharedState({
         lists: lists.value,
         categories: categoryStore.categories,
         items: itemStore.items,
+        pantryItems: pantryStore.pantryItems,
         currency: settingsStore.currency,
         selectedListId: selectedListId.value,
       })
@@ -303,6 +320,7 @@ export const useListStore = defineStore('list', () => {
     try {
       const state = JSON.parse(localStorage.getItem(COLLECTION_STATE) ?? '')
       const itemStore = useItemStore()
+      const pantryStore = usePantryStore()
       const categoryStore = useCategoryStore()
       const settingsStore = useSettingsStore()
       const uiStore = useUIStore()
@@ -310,6 +328,9 @@ export const useListStore = defineStore('list', () => {
       lists.value = state?.lists ?? lists.value
       categoryStore.categories = state?.categories ?? [{ ...DEFAULT_CATEGORY }]
       itemStore.items = state?.items ?? itemStore.items
+      if (state?.pantryItems !== undefined) {
+        pantryStore.hydrateItems(state.pantryItems)
+      }
       settingsStore.currency = state?.currency ?? settingsStore.currency
       selectedListId.value = state?.selectedListId ?? selectedListId.value
       uiStore.navDrawerOpen = (state?.navDrawerOpen ?? uiStore.navDrawerOpen) && !isMobile()
@@ -389,6 +410,27 @@ export const useListStore = defineStore('list', () => {
       message: `${request.name} has been added successfully`,
     })
     uiStore.setSaving(false)
+  }
+
+  async function createListWithItems(request: UpsertListRequest, itemIds: string[]) {
+    await upsertList(request)
+
+    const list = listById(request.id)
+    if (!list) return undefined
+
+    list.items.push(
+      ...itemIds.map((itemId): ListItem => ({
+        itemId,
+        notes: '',
+        addedToCart: false,
+        quantity: 1,
+      })),
+    )
+    lists.value = [...lists.value]
+    persistToLocalStorage()
+    await syncSharedState({ lists: lists.value })
+
+    return list.id
   }
 
   async function deleteList(listId: string) {
@@ -642,11 +684,15 @@ export const useListStore = defineStore('list', () => {
     uiStore.setSaving(false)
   }
 
-  async function emptyCartItems(listId: string) {
+  async function finishAndClearCart(listId: string, missingItemIdsToAdd: string[] = []) {
     const uiStore = useUIStore()
+    const pantryStore = usePantryStore()
+    const cartItemIdsToFinish = cartItemIds(listId)
 
     const listIndex = lists.value.findIndex((l) => l.id === listId)
     if (listIndex !== -1) {
+      pantryStore.completePurchasedItems(cartItemIdsToFinish, missingItemIdsToAdd)
+
       lists.value[listIndex]!.items = lists.value[listIndex]!.items.filter(
         (li: ListItem) => !li.addedToCart,
       )
@@ -656,7 +702,7 @@ export const useListStore = defineStore('list', () => {
     persistToLocalStorage()
 
     uiStore.setSaving(true)
-    await syncSharedState({ lists: lists.value })
+    await syncSharedState({ lists: lists.value, pantryItems: pantryStore.pantryItems })
 
     uiStore.addNotification({
       type: 'info',
@@ -708,12 +754,14 @@ export const useListStore = defineStore('list', () => {
 
     const categoryStore = useCategoryStore()
     const itemStore = useItemStore()
+    const pantryStore = usePantryStore()
     const uiStore = useUIStore()
 
     lists.value = []
     selectedListId.value = ''
     categoryStore.categories = [{ ...DEFAULT_CATEGORY }]
     itemStore.items = []
+    pantryStore.pantryItems = []
     stateLoaded.value = false
     uiStore.navDrawerOpen = false
 
@@ -761,6 +809,7 @@ export const useListStore = defineStore('list', () => {
     listById,
     listIcon,
     listIconSelectItems,
+    cartItemIds,
     listHasItemId,
     ItemIdIsInCart,
     materializedList,
@@ -772,6 +821,7 @@ export const useListStore = defineStore('list', () => {
     loadStateFromStore,
     setDefaultItems,
     upsertList,
+    createListWithItems,
     deleteList,
     setSelectedListId,
     setTitleByListId,
@@ -780,7 +830,7 @@ export const useListStore = defineStore('list', () => {
     deleteListItem,
     addToCart,
     removeFromCart,
-    emptyCartItems,
+    finishAndClearCart,
     toggleCartPanel,
     sanitizeState,
     saveState,

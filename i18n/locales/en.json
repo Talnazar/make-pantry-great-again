@@ -6,6 +6,7 @@
     "refreshMessage": "This {platform} will reload in a few seconds."
   },
   "nav": {
+    "pantry": "Pantry",
     "manageLists": "Manage Lists",
     "manageCategories": "Manage Categories",
     "manageItems": "Manage Items",
@@ -33,7 +34,11 @@
     "totalPriceHint": "Total Price: {price}",
     "itemCount": "{count} items",
     "itemCountSingular": "{count} item",
-    "deleteConfirmation": "Are you sure you want to delete"
+    "deleteConfirmation": "Are you sure you want to delete",
+    "addPurchasedItemsTitle": "Add purchased items to Pantry?",
+    "addPurchasedItemsDescription": "These purchased items are not currently in your Pantry:",
+    "addSelected": "Add selected",
+    "skip": "Skip"
   },
   "item": {
     "addItem": "Add Item",
@@ -42,6 +47,34 @@
     "loadMore": "Load More",
     "synchronize": "Synchronize",
     "syncSuccess": "Items have been synchronized successfully"
+  },
+  "pantry": {
+    "title": "Pantry",
+    "addItem": "Add Item",
+    "chooseCatalogItem": "Choose an item from the catalog",
+    "searchItems": "Search pantry items",
+    "createShoppingList": "Create shopping list",
+    "listName": "List name",
+    "defaultListName": "Pantry Shopping List",
+    "haveAtHomeFilter": "Have at home",
+    "needToBuyFilter": "Need to buy",
+    "filterAll": "All",
+    "filterYes": "Yes",
+    "filterNo": "No",
+    "sortBy": "Sort by",
+    "sortNameAsc": "Name: A to Z",
+    "sortNameDesc": "Name: Z to A",
+    "groupByCategory": "Group by category",
+    "noMatchingItems": "No Pantry items match these filters",
+    "haveAtHome": "Have at home",
+    "needToBuy": "Need to buy",
+    "lastChecked": "Last checked: {date}",
+    "checkItem": "Mark {name} as checked",
+    "staleItem": "Stale item",
+    "removeItem": "Remove {name}",
+    "emptyTitle": "Your pantry is empty",
+    "emptyDescription": "Add an item from the catalog to get started.",
+    "reviewDescription": "Select the items to include in this shopping list."
   },
   "category": {
     "addCategory": "Add Category",

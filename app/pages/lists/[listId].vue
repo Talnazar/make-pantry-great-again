@@ -8,7 +8,7 @@ import {
   mdiNotificationClearAll,
 } from '@mdi/js'
 import { CATEGORY_ID_UNCATEGORIZED } from '~/stores/category'
-import type { Category, MaterializedListItem, SelectItem } from '~/types/state'
+import type { Category, Item, MaterializedListItem, SelectItem } from '~/types/state'
 import emptyListSvg from '~/assets/images/empty-list.svg'
 
 const { t } = useI18n()
@@ -16,6 +16,7 @@ const route = useRoute()
 const localePath = useLocalePath()
 const listStore = useListStore()
 const itemStore = useItemStore()
+const pantryStore = usePantryStore()
 const categoryStore = useCategoryStore()
 const uiStore = useUIStore()
 
@@ -45,6 +46,10 @@ const formCategoryId = ref(CATEGORY_ID_UNCATEGORIZED)
 const formUnit = ref('')
 const formQuantity = ref(1)
 const formNotes = ref('')
+const purchasedItemsDialog = ref(false)
+const missingPurchasedItems = ref<Item[]>([])
+const selectedMissingPurchasedItemIds = ref<string[]>([])
+const finishingShopping = ref(false)
 
 const formNameRules = [
   (value: string | null): boolean | string =>
@@ -172,8 +177,26 @@ function onSelect(item: SelectItem) {
   resetInput()
 }
 
-function onClearCart() {
-  listStore.emptyCartItems(listStore.selectedList.id)
+async function onFinishAndClearCart() {
+  const cartItemIds = listStore.cartItemIds(listStore.selectedList.id)
+  missingPurchasedItems.value = cartItemIds
+    .map((itemId) => itemStore.findItemById(itemId))
+    .filter((item): item is Item => item !== undefined && !pantryStore.hasPantryItem(item.id))
+
+  if (missingPurchasedItems.value.length === 0) {
+    await finishShopping([])
+    return
+  }
+
+  selectedMissingPurchasedItemIds.value = missingPurchasedItems.value.map((item) => item.id)
+  purchasedItemsDialog.value = true
+}
+
+async function finishShopping(missingItemIdsToAdd: string[]) {
+  finishingShopping.value = true
+  await listStore.finishAndClearCart(listStore.selectedList.id, missingItemIdsToAdd)
+  finishingShopping.value = false
+  purchasedItemsDialog.value = false
 }
 
 function onSave() {
@@ -378,7 +401,7 @@ onMounted(async () => {
                   density="compact"
                   :prepend-icon="mdiNotificationClearAll"
                   @click.stop.prevent
-                  @click="onClearCart"
+                  @click="onFinishAndClearCart"
                 >
                   {{ $t('list.clearCart') }}
                 </v-btn>
@@ -437,6 +460,44 @@ onMounted(async () => {
         </v-expansion-panels>
       </v-col>
     </v-row>
+
+    <v-dialog v-model="purchasedItemsDialog" max-width="520" persistent>
+      <v-card>
+        <v-card-title>{{ t('list.addPurchasedItemsTitle') }}</v-card-title>
+        <v-card-text>
+          <p class="mb-3">{{ t('list.addPurchasedItemsDescription') }}</p>
+          <v-checkbox
+            v-for="item in missingPurchasedItems"
+            :key="item.id"
+            v-model="selectedMissingPurchasedItemIds"
+            :label="item.name"
+            :value="item.id"
+            hide-details
+            color="primary"
+          />
+        </v-card-text>
+        <v-card-actions>
+          <v-btn
+            color="primary"
+            variant="flat"
+            :loading="finishingShopping"
+            :disabled="finishingShopping"
+            @click="finishShopping(selectedMissingPurchasedItemIds)"
+          >
+            {{ t('list.addSelected') }}
+          </v-btn>
+          <v-spacer />
+          <v-btn
+            color="warning"
+            variant="text"
+            :disabled="finishingShopping"
+            @click="finishShopping([])"
+          >
+            {{ t('list.skip') }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
 
     <!-- Edit item dialog -->
     <v-dialog

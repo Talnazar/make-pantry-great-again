@@ -77,6 +77,15 @@
 
         <!-- Manage navigation items -->
         <v-list nav rounded prepend-gap="16" color="primary">
+          <v-list-item :to="localePath('/pantry')" link>
+            <template #prepend>
+              <v-icon :icon="mdiFridgeOutline" />
+            </template>
+            <v-list-item-title class="text-body-large">
+              {{ t('nav.pantry') }}
+            </v-list-item-title>
+          </v-list-item>
+
           <v-list-item :to="localePath('/manage/lists')" link>
             <template #prepend>
               <v-icon :icon="mdiPlaylistEdit" />
@@ -151,6 +160,7 @@ import {
   mdiArchiveCogOutline,
   mdiCheck,
   mdiCog,
+  mdiFridgeOutline,
   mdiInformation,
   mdiPlaylistEdit,
   mdiShapeOutline,

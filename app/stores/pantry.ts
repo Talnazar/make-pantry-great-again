@@ -138,6 +138,8 @@ export const usePantryStore = defineStore('pantry', () => {
     uiStore.setSaving(false)
   }
 
+  // TODO: Move local persistence to a shared application-state coordinator so
+  // the Pantry store does not depend on the List store to save its state.
   async function persistAndSync() {
     const listStore = useListStore()
     listStore.persistToLocalStorage()

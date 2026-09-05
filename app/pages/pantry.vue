@@ -26,7 +26,6 @@ definePageMeta({
   layout: 'default',
 })
 
-const selectedCatalogItemId = ref<string | null>(null)
 const exportDialog = ref(false)
 const selectedExportItemIds = ref<string[]>([])
 const exportListName = ref('')
@@ -36,6 +35,7 @@ const needToBuyFilter = ref('all')
 const sortOption = ref('nameAsc')
 const groupByCategory = ref(false)
 const searchQuery = ref('')
+const addItemSearchQuery = ref('')
 const expandedCategoryIds = ref<string[]>([])
 const categoryStore = useCategoryStore()
 const settingsStore = useSettingsStore()
@@ -45,6 +45,13 @@ const availableItems = computed(() =>
     .filter((item) => !pantryStore.hasPantryItem(item.id))
     .sort((a, b) => a.name.localeCompare(b.name)),
 )
+
+const filteredAvailableItems = computed(() => {
+  const query = addItemSearchQuery.value.trim().toLowerCase()
+  return availableItems.value.filter(
+    (item) => query === '' || item.name.toLowerCase().includes(query),
+  )
+})
 
 const filterOptions = computed(() => [
   { title: t('pantry.filterAll'), value: 'all' },
@@ -156,11 +163,8 @@ function closeExportDialog() {
   exportDialog.value = false
 }
 
-async function addSelectedItem() {
-  if (!selectedCatalogItemId.value) return
-
-  await pantryStore.addItem(selectedCatalogItemId.value)
-  selectedCatalogItemId.value = null
+async function addItem(itemId: string) {
+  await pantryStore.addItem(itemId)
 }
 
 async function createShoppingList() {
@@ -187,7 +191,7 @@ onMounted(async () => {
   <v-container>
     <v-row>
       <v-col cols="12">
-        <div class="d-flex align-center ga-3 mb-4">
+        <div class="mb-4">
           <v-text-field
             v-model="searchQuery"
             :prepend-inner-icon="mdiMagnify"
@@ -197,11 +201,9 @@ onMounted(async () => {
             color="primary"
             hide-details
           />
-          <v-select
-            v-model="selectedCatalogItemId"
-            :items="availableItems"
-            item-title="name"
-            item-value="id"
+          <v-text-field
+            v-model="addItemSearchQuery"
+            :prepend-inner-icon="mdiPlus"
             :label="t('pantry.addItem')"
             :placeholder="t('pantry.chooseCatalogItem')"
             variant="outlined"
@@ -209,14 +211,32 @@ onMounted(async () => {
             hide-details
             clearable
           />
-          <v-btn
-            color="primary"
-            :disabled="!selectedCatalogItemId || uiStore.saving"
-            @click="addSelectedItem"
+          <v-list
+            v-if="addItemSearchQuery.trim() && filteredAvailableItems.length > 0"
+            class="mt-2"
+            lines="one"
           >
-            <v-icon start :icon="mdiPlus" />
-            {{ t('pantry.addItem') }}
-          </v-btn>
+            <v-list-item v-for="item in filteredAvailableItems" :key="item.id" :title="item.name">
+              <template #append>
+                <v-btn
+                  color="primary"
+                  variant="tonal"
+                  size="small"
+                  :disabled="uiStore.saving"
+                  @click="addItem(item.id)"
+                >
+                  <v-icon start :icon="mdiPlus" />
+                  {{ t('pantry.addItem') }}
+                </v-btn>
+              </template>
+            </v-list-item>
+          </v-list>
+          <p
+            v-else-if="addItemSearchQuery.trim() && filteredAvailableItems.length === 0"
+            class="text-medium-emphasis text-body-2 mt-2 mb-0"
+          >
+            {{ t('pantry.noCatalogItemsMatch') }}
+          </p>
         </div>
 
         <div class="d-flex align-center ga-3 mb-4">

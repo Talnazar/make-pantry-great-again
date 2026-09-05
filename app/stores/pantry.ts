@@ -124,10 +124,7 @@ export const usePantryStore = defineStore('pantry', () => {
       haveAtHome: pantryItem.haveAtHome ?? false,
       needToBuy: pantryItem.needToBuy ?? false,
       updatedAt: pantryItem.updatedAt ?? fallbackTimestamp,
-      staleAfterDays:
-        pantryItem.staleAfterDays === undefined || pantryItem.staleAfterDays === 7
-          ? null
-          : pantryItem.staleAfterDays,
+      staleAfterDays: pantryItem.staleAfterDays ?? null,
     }))
   }
 

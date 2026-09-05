@@ -231,12 +231,12 @@ describe('Pantry store', () => {
     expect(store.pantryItemById('eggs')?.staleAfterDays).toBeNull()
   })
 
-  it('migrates the legacy seven-day default to null', () => {
+  it('preserves an explicit seven-day threshold', () => {
     const store = usePantryStore()
 
     store.hydrateItems([{ itemId: 'eggs', staleAfterDays: 7 }])
 
-    expect(store.pantryItemById('eggs')?.staleAfterDays).toBeNull()
+    expect(store.pantryItemById('eggs')?.staleAfterDays).toBe(7)
   })
 
   it('exports only selected items marked as need to buy without changing Pantry state', async () => {

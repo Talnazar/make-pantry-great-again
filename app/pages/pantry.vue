@@ -316,6 +316,19 @@ onMounted(async () => {
                         pantryStore.setNeedToBuy(materializedItem.item.id, $event ?? false)
                       "
                     />
+                    <v-text-field
+                      :model-value="materializedItem.pantryItem.staleAfterDays"
+                      :label="t('pantry.staleAfterDays')"
+                      type="number"
+                      min="1"
+                      variant="outlined"
+                      density="compact"
+                      hide-details
+                      style="max-width: 125px"
+                      @update:model-value="
+                        pantryStore.setStaleAfterDays(materializedItem.item.id, Number($event))
+                      "
+                    />
                     <v-tooltip location="bottom">
                       <template #activator="{ props: tooltipProps }">
                         <v-btn
@@ -417,6 +430,22 @@ onMounted(async () => {
                             color="primary"
                             @update:model-value="
                               pantryStore.setNeedToBuy(materializedItem.item.id, $event ?? false)
+                            "
+                          />
+                          <v-text-field
+                            :model-value="materializedItem.pantryItem.staleAfterDays"
+                            :label="t('pantry.staleAfterDays')"
+                            type="number"
+                            min="1"
+                            variant="outlined"
+                            density="compact"
+                            hide-details
+                            style="max-width: 125px"
+                            @update:model-value="
+                              pantryStore.setStaleAfterDays(
+                                materializedItem.item.id,
+                                Number($event),
+                              )
                             "
                           />
                           <v-tooltip location="bottom">

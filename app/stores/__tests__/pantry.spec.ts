@@ -144,6 +144,31 @@ describe('Pantry store', () => {
     vi.useRealTimers()
   })
 
+  it('updates the stale threshold without changing the checked timestamp', async () => {
+    const store = usePantryStore()
+    await store.addItem('eggs')
+    const initialTimestamp = store.pantryItemById('eggs')!.updatedAt
+
+    await store.setStaleAfterDays('eggs', 14)
+
+    expect(store.pantryItemById('eggs')).toMatchObject({
+      staleAfterDays: 14,
+      updatedAt: initialTimestamp,
+    })
+    expect(syncSharedStateMock).toHaveBeenCalledTimes(2)
+  })
+
+  it('ignores invalid stale thresholds', async () => {
+    const store = usePantryStore()
+    await store.addItem('eggs')
+
+    await store.setStaleAfterDays('eggs', 0)
+    await store.setStaleAfterDays('eggs', 1.5)
+
+    expect(store.pantryItemById('eggs')?.staleAfterDays).toBe(7)
+    expect(syncSharedStateMock).toHaveBeenCalledOnce()
+  })
+
   it('adds selected missing purchases as already bought', () => {
     const store = usePantryStore()
     store.completePurchasedItems(['milk', 'bananas'], ['bananas'])

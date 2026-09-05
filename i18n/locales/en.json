@@ -68,6 +68,7 @@
     "noMatchingItems": "No Pantry items match these filters",
     "haveAtHome": "Have at home",
     "needToBuy": "Need to buy",
+    "staleAfterDays": "Stale after days",
     "lastChecked": "Last checked: {date}",
     "checkItem": "Mark {name} as checked",
     "staleItem": "Stale item",

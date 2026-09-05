@@ -6,6 +6,7 @@ import {
   mdiDelete,
   mdiMagnify,
   mdiPlus,
+  mdiRestore,
 } from '@mdi/js'
 import type { Category } from '~/types/state'
 import type { MaterializedPantryItem } from '~/stores/pantry'
@@ -37,6 +38,7 @@ const groupByCategory = ref(false)
 const searchQuery = ref('')
 const expandedCategoryIds = ref<string[]>([])
 const categoryStore = useCategoryStore()
+const defaultStaleAfterDays = 7
 
 const availableItems = computed(() =>
   itemStore.items
@@ -126,9 +128,13 @@ function formatLastChecked(updatedAt: string): string {
   return Number.isNaN(date.getTime()) ? '' : dateFormatter.format(date)
 }
 
-function isStale(updatedAt: string, staleAfterDays: number): boolean {
+function effectiveStaleAfterDays(staleAfterDays: number | null): number {
+  return staleAfterDays ?? defaultStaleAfterDays
+}
+
+function isStale(updatedAt: string, staleAfterDays: number | null): boolean {
   const timestamp = new Date(updatedAt).getTime()
-  const staleAfterMs = staleAfterDays * 24 * 60 * 60 * 1000
+  const staleAfterMs = effectiveStaleAfterDays(staleAfterDays) * 24 * 60 * 60 * 1000
   return !Number.isNaN(timestamp) && Date.now() - timestamp > staleAfterMs
 }
 
@@ -316,6 +322,35 @@ onMounted(async () => {
                         pantryStore.setNeedToBuy(materializedItem.item.id, $event ?? false)
                       "
                     />
+                    <v-text-field
+                      :model-value="
+                        effectiveStaleAfterDays(materializedItem.pantryItem.staleAfterDays)
+                      "
+                      :label="t('pantry.staleAfterDays')"
+                      type="number"
+                      min="1"
+                      variant="outlined"
+                      density="compact"
+                      hide-details
+                      style="max-width: 125px"
+                      @update:model-value="
+                        pantryStore.setStaleAfterDays(materializedItem.item.id, Number($event))
+                      "
+                    />
+                    <v-tooltip location="bottom">
+                      <template #activator="{ props: tooltipProps }">
+                        <v-btn
+                          v-bind="tooltipProps"
+                          :icon="mdiRestore"
+                          variant="text"
+                          :disabled="
+                            uiStore.saving || materializedItem.pantryItem.staleAfterDays === null
+                          "
+                          @click="pantryStore.resetStaleAfterDays(materializedItem.item.id)"
+                        />
+                      </template>
+                      <span>{{ t('pantry.resetStaleAfterDays') }}</span>
+                    </v-tooltip>
                     <v-tooltip location="bottom">
                       <template #activator="{ props: tooltipProps }">
                         <v-btn
@@ -419,6 +454,39 @@ onMounted(async () => {
                               pantryStore.setNeedToBuy(materializedItem.item.id, $event ?? false)
                             "
                           />
+                          <v-text-field
+                            :model-value="
+                              effectiveStaleAfterDays(materializedItem.pantryItem.staleAfterDays)
+                            "
+                            :label="t('pantry.staleAfterDays')"
+                            type="number"
+                            min="1"
+                            variant="outlined"
+                            density="compact"
+                            hide-details
+                            style="max-width: 125px"
+                            @update:model-value="
+                              pantryStore.setStaleAfterDays(
+                                materializedItem.item.id,
+                                Number($event),
+                              )
+                            "
+                          />
+                          <v-tooltip location="bottom">
+                            <template #activator="{ props: tooltipProps }">
+                              <v-btn
+                                v-bind="tooltipProps"
+                                :icon="mdiRestore"
+                                variant="text"
+                                :disabled="
+                                  uiStore.saving ||
+                                  materializedItem.pantryItem.staleAfterDays === null
+                                "
+                                @click="pantryStore.resetStaleAfterDays(materializedItem.item.id)"
+                              />
+                            </template>
+                            <span>{{ t('pantry.resetStaleAfterDays') }}</span>
+                          </v-tooltip>
                           <v-tooltip location="bottom">
                             <template #activator="{ props: tooltipProps }">
                               <v-btn

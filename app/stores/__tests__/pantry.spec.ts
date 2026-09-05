@@ -97,7 +97,7 @@ describe('Pantry store', () => {
     expect(store.pantryItemById('eggs')?.updatedAt).toMatch(
       /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
     )
-    expect(store.pantryItemById('eggs')?.staleAfterDays).toBe(7)
+    expect(store.pantryItemById('eggs')?.staleAfterDays).toBeNull()
     expect(syncSharedStateMock).toHaveBeenCalledOnce()
   })
 
@@ -144,6 +144,49 @@ describe('Pantry store', () => {
     vi.useRealTimers()
   })
 
+  it('updates the stale threshold without changing the checked timestamp', async () => {
+    const store = usePantryStore()
+    await store.addItem('eggs')
+    const initialTimestamp = store.pantryItemById('eggs')!.updatedAt
+
+    await store.setStaleAfterDays('eggs', 14)
+
+    expect(store.pantryItemById('eggs')).toMatchObject({
+      staleAfterDays: 14,
+      updatedAt: initialTimestamp,
+    })
+    expect(syncSharedStateMock).toHaveBeenCalledTimes(2)
+  })
+
+  it('resets the stale threshold to the default without changing the checked timestamp', async () => {
+    const store = usePantryStore()
+    await store.addItem('eggs')
+    await store.setStaleAfterDays('eggs', 14)
+    const initialTimestamp = store.pantryItemById('eggs')!.updatedAt
+
+    await store.resetStaleAfterDays('eggs')
+
+    expect(store.pantryItemById('eggs')).toMatchObject({
+      staleAfterDays: null,
+      updatedAt: initialTimestamp,
+    })
+    expect(syncSharedStateMock).toHaveBeenCalledTimes(3)
+
+    await store.resetStaleAfterDays('eggs')
+    expect(syncSharedStateMock).toHaveBeenCalledTimes(3)
+  })
+
+  it('ignores invalid stale thresholds', async () => {
+    const store = usePantryStore()
+    await store.addItem('eggs')
+
+    await store.setStaleAfterDays('eggs', 0)
+    await store.setStaleAfterDays('eggs', 1.5)
+
+    expect(store.pantryItemById('eggs')?.staleAfterDays).toBeNull()
+    expect(syncSharedStateMock).toHaveBeenCalledOnce()
+  })
+
   it('adds selected missing purchases as already bought', () => {
     const store = usePantryStore()
     store.completePurchasedItems(['milk', 'bananas'], ['bananas'])
@@ -157,7 +200,7 @@ describe('Pantry store', () => {
     expect(store.pantryItemById('bananas')?.updatedAt).toMatch(
       /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
     )
-    expect(store.pantryItemById('bananas')?.staleAfterDays).toBe(7)
+    expect(store.pantryItemById('bananas')?.staleAfterDays).toBeNull()
   })
 
   it('keeps the timestamp unchanged when purchased flags are already complete', () => {
@@ -185,6 +228,14 @@ describe('Pantry store', () => {
     expect(store.pantryItemById('eggs')?.updatedAt).toMatch(
       /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
     )
+    expect(store.pantryItemById('eggs')?.staleAfterDays).toBeNull()
+  })
+
+  it('preserves an explicit seven-day threshold', () => {
+    const store = usePantryStore()
+
+    store.hydrateItems([{ itemId: 'eggs', staleAfterDays: 7 }])
+
     expect(store.pantryItemById('eggs')?.staleAfterDays).toBe(7)
   })
 

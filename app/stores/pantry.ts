@@ -46,7 +46,7 @@ export const usePantryStore = defineStore('pantry', () => {
         haveAtHome: false,
         needToBuy: false,
         updatedAt: new Date().toISOString(),
-        staleAfterDays: 7,
+        staleAfterDays: null,
       },
     ]
 
@@ -73,6 +73,35 @@ export const usePantryStore = defineStore('pantry', () => {
     await updateFlags(itemId, { needToBuy })
   }
 
+  async function setStaleAfterDays(itemId: string, staleAfterDays: number) {
+    if (!hasPantryItem(itemId) || !Number.isInteger(staleAfterDays) || staleAfterDays < 1) return
+
+    const uiStore = useUIStore()
+    uiStore.setSaving(true)
+    pantryItems.value = pantryItems.value.map((pantryItem) =>
+      pantryItem.itemId === itemId ? { ...pantryItem, staleAfterDays } : pantryItem,
+    )
+
+    await persistAndSync()
+    uiStore.setSaving(false)
+  }
+
+  async function resetStaleAfterDays(itemId: string) {
+    const pantryItem = pantryItemById(itemId)
+    if (!pantryItem || pantryItem.staleAfterDays === null) return
+
+    const uiStore = useUIStore()
+    uiStore.setSaving(true)
+    pantryItems.value = pantryItems.value.map((currentPantryItem) =>
+      currentPantryItem.itemId === itemId
+        ? { ...currentPantryItem, staleAfterDays: null }
+        : currentPantryItem,
+    )
+
+    await persistAndSync()
+    uiStore.setSaving(false)
+  }
+
   async function checkItem(itemId: string) {
     if (!hasPantryItem(itemId)) return
 
@@ -95,7 +124,7 @@ export const usePantryStore = defineStore('pantry', () => {
       haveAtHome: pantryItem.haveAtHome ?? false,
       needToBuy: pantryItem.needToBuy ?? false,
       updatedAt: pantryItem.updatedAt ?? fallbackTimestamp,
-      staleAfterDays: pantryItem.staleAfterDays ?? 7,
+      staleAfterDays: pantryItem.staleAfterDays ?? null,
     }))
   }
 
@@ -126,7 +155,7 @@ export const usePantryStore = defineStore('pantry', () => {
         haveAtHome: true,
         needToBuy: false,
         updatedAt: new Date().toISOString(),
-        staleAfterDays: 7,
+        staleAfterDays: null,
       }))
 
     if (newPantryItems.length > 0) {
@@ -221,6 +250,8 @@ export const usePantryStore = defineStore('pantry', () => {
     removeItem,
     setHaveAtHome,
     setNeedToBuy,
+    setStaleAfterDays,
+    resetStaleAfterDays,
     checkItem,
     completePurchasedItems,
     createShoppingList,

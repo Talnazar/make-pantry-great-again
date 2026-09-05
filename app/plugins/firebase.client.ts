@@ -1,6 +1,8 @@
 import { initializeApp, getApps } from 'firebase/app'
+import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore'
 
 export default defineNuxtPlugin(() => {
+  const config = useRuntimeConfig()
   const firebaseConfig = {
     apiKey: 'AIzaSyBuK6nJU0Gio_4g7vAxuMar8c_IKRvcH5c',
     authDomain: 'pantry-doodoo.firebaseapp.com',
@@ -12,5 +14,13 @@ export default defineNuxtPlugin(() => {
 
   if (!getApps().length) {
     initializeApp(firebaseConfig)
+  }
+
+  if (config.public.useFirestoreEmulator) {
+    connectFirestoreEmulator(
+      getFirestore(),
+      config.public.firestoreEmulatorHost,
+      config.public.firestoreEmulatorPort,
+    )
   }
 })

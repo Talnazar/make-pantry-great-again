@@ -12,6 +12,9 @@ export default defineNuxtConfig({
     public: {
       appName: process.env.NUXT_PUBLIC_APP_NAME || 'Pantry',
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://pantry-doodoo.web.app',
+      useFirestoreEmulator: process.env.NUXT_PUBLIC_USE_FIRESTORE_EMULATOR === 'true',
+      firestoreEmulatorHost: process.env.NUXT_PUBLIC_FIRESTORE_EMULATOR_HOST || '127.0.0.1',
+      firestoreEmulatorPort: Number(process.env.NUXT_PUBLIC_FIRESTORE_EMULATOR_PORT || 8080),
     },
   },
 

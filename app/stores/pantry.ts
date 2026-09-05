@@ -86,6 +86,22 @@ export const usePantryStore = defineStore('pantry', () => {
     uiStore.setSaving(false)
   }
 
+  async function resetStaleAfterDays(itemId: string) {
+    const pantryItem = pantryItemById(itemId)
+    if (!pantryItem || pantryItem.staleAfterDays === null) return
+
+    const uiStore = useUIStore()
+    uiStore.setSaving(true)
+    pantryItems.value = pantryItems.value.map((currentPantryItem) =>
+      currentPantryItem.itemId === itemId
+        ? { ...currentPantryItem, staleAfterDays: null }
+        : currentPantryItem,
+    )
+
+    await persistAndSync()
+    uiStore.setSaving(false)
+  }
+
   async function checkItem(itemId: string) {
     if (!hasPantryItem(itemId)) return
 
@@ -238,6 +254,7 @@ export const usePantryStore = defineStore('pantry', () => {
     setHaveAtHome,
     setNeedToBuy,
     setStaleAfterDays,
+    resetStaleAfterDays,
     checkItem,
     completePurchasedItems,
     createShoppingList,

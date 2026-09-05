@@ -6,6 +6,7 @@ import {
   mdiDelete,
   mdiMagnify,
   mdiPlus,
+  mdiRestore,
 } from '@mdi/js'
 import type { Category } from '~/types/state'
 import type { MaterializedPantryItem } from '~/stores/pantry'
@@ -340,6 +341,20 @@ onMounted(async () => {
                       <template #activator="{ props: tooltipProps }">
                         <v-btn
                           v-bind="tooltipProps"
+                          :icon="mdiRestore"
+                          variant="text"
+                          :disabled="
+                            uiStore.saving || materializedItem.pantryItem.staleAfterDays === null
+                          "
+                          @click="pantryStore.resetStaleAfterDays(materializedItem.item.id)"
+                        />
+                      </template>
+                      <span>{{ t('pantry.resetStaleAfterDays') }}</span>
+                    </v-tooltip>
+                    <v-tooltip location="bottom">
+                      <template #activator="{ props: tooltipProps }">
+                        <v-btn
+                          v-bind="tooltipProps"
                           :icon="mdiCheckCircleOutline"
                           color="success"
                           variant="text"
@@ -457,6 +472,21 @@ onMounted(async () => {
                               )
                             "
                           />
+                          <v-tooltip location="bottom">
+                            <template #activator="{ props: tooltipProps }">
+                              <v-btn
+                                v-bind="tooltipProps"
+                                :icon="mdiRestore"
+                                variant="text"
+                                :disabled="
+                                  uiStore.saving ||
+                                  materializedItem.pantryItem.staleAfterDays === null
+                                "
+                                @click="pantryStore.resetStaleAfterDays(materializedItem.item.id)"
+                              />
+                            </template>
+                            <span>{{ t('pantry.resetStaleAfterDays') }}</span>
+                          </v-tooltip>
                           <v-tooltip location="bottom">
                             <template #activator="{ props: tooltipProps }">
                               <v-btn

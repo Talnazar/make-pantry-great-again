@@ -158,6 +158,24 @@ describe('Pantry store', () => {
     expect(syncSharedStateMock).toHaveBeenCalledTimes(2)
   })
 
+  it('resets the stale threshold to the default without changing the checked timestamp', async () => {
+    const store = usePantryStore()
+    await store.addItem('eggs')
+    await store.setStaleAfterDays('eggs', 14)
+    const initialTimestamp = store.pantryItemById('eggs')!.updatedAt
+
+    await store.resetStaleAfterDays('eggs')
+
+    expect(store.pantryItemById('eggs')).toMatchObject({
+      staleAfterDays: null,
+      updatedAt: initialTimestamp,
+    })
+    expect(syncSharedStateMock).toHaveBeenCalledTimes(3)
+
+    await store.resetStaleAfterDays('eggs')
+    expect(syncSharedStateMock).toHaveBeenCalledTimes(3)
+  })
+
   it('ignores invalid stale thresholds', async () => {
     const store = usePantryStore()
     await store.addItem('eggs')

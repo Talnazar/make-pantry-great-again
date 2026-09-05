@@ -6,14 +6,14 @@
     "refreshMessage": "This {platform} will reload in a few seconds."
   },
   "nav": {
-    "pantry": "Pantry",
-    "manageLists": "Manage Lists",
-    "manageCategories": "Manage Categories",
-    "manageItems": "Manage Items",
-    "sendFeedback": "Send Feedback",
-    "refresh": "Refresh",
-    "settings": "Settings",
-    "version": "version"
+    "pantry": "מזווה",
+    "manageLists": "ניהול רשימות",
+    "manageCategories": "ניהול קטגוריות",
+    "manageItems": "ניהול פריטים",
+    "sendFeedback": "שליחת משוב",
+    "refresh": "רענון",
+    "settings": "הגדרות",
+    "version": "גרסה"
   },
   "home": {
     "heroTitle": "Your Smart Shopping List",
@@ -87,16 +87,16 @@
     "uncategorized": "Uncategorized"
   },
   "settings": {
-    "title": "Settings",
-    "accountSettings": "Account Settings",
-    "appearance": "Appearance",
-    "theme": "Theme",
-    "darkMode": "Dark",
-    "lightMode": "Light",
+    "title": "הגדרות",
+    "accountSettings": "הגדרות חשבון",
+    "appearance": "מראה",
+    "theme": "ערכת נושא",
+    "darkMode": "כהה",
+    "lightMode": "בהירה",
     "timeFormat": "Time format",
     "timeFormat12Hour": "12-hour (AM/PM)",
     "timeFormat24Hour": "24-hour",
-    "language": "Language",
+    "language": "שפה",
     "defaultStaleAfterDays": "Default stale after days",
     "saveSettings": "Save Settings"
   },

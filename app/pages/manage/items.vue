@@ -34,9 +34,9 @@ const editedItem = ref<UpsertItemRequest>({ ...defaultItem })
 
 const formNameRules = [
   (value: string | null): boolean | string =>
-    (!!value && value.trim() !== '') || t('errors.categoryNameRequired'),
+    (!!value && value.trim() !== '') || t('errors.nameRequired'),
   (value: string | null): boolean | string =>
-    (!!value && value.length <= 15) || t('errors.categoryNameTooLong'),
+    (!!value && value.length <= 50) || t('errors.nameTooLong'),
 ]
 
 const filteredItems = computed(() => {
@@ -166,7 +166,7 @@ function clearForm() {
                     :disabled="uiStore.saving"
                     :rules="formNameRules"
                     :label="$t('common.name')"
-                    counter="15"
+                    counter="50"
                     color="primary"
                     persistent-placeholder
                     :placeholder="$t('common.placeholderItemName')"

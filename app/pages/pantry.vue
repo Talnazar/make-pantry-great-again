@@ -37,6 +37,7 @@ const groupByCategory = ref(false)
 const searchQuery = ref('')
 const expandedCategoryIds = ref<string[]>([])
 const categoryStore = useCategoryStore()
+const defaultStaleAfterDays = 7
 
 const availableItems = computed(() =>
   itemStore.items
@@ -126,9 +127,13 @@ function formatLastChecked(updatedAt: string): string {
   return Number.isNaN(date.getTime()) ? '' : dateFormatter.format(date)
 }
 
-function isStale(updatedAt: string, staleAfterDays: number): boolean {
+function effectiveStaleAfterDays(staleAfterDays: number | null): number {
+  return staleAfterDays ?? defaultStaleAfterDays
+}
+
+function isStale(updatedAt: string, staleAfterDays: number | null): boolean {
   const timestamp = new Date(updatedAt).getTime()
-  const staleAfterMs = staleAfterDays * 24 * 60 * 60 * 1000
+  const staleAfterMs = effectiveStaleAfterDays(staleAfterDays) * 24 * 60 * 60 * 1000
   return !Number.isNaN(timestamp) && Date.now() - timestamp > staleAfterMs
 }
 
@@ -317,7 +322,9 @@ onMounted(async () => {
                       "
                     />
                     <v-text-field
-                      :model-value="materializedItem.pantryItem.staleAfterDays"
+                      :model-value="
+                        effectiveStaleAfterDays(materializedItem.pantryItem.staleAfterDays)
+                      "
                       :label="t('pantry.staleAfterDays')"
                       type="number"
                       min="1"
@@ -433,7 +440,9 @@ onMounted(async () => {
                             "
                           />
                           <v-text-field
-                            :model-value="materializedItem.pantryItem.staleAfterDays"
+                            :model-value="
+                              effectiveStaleAfterDays(materializedItem.pantryItem.staleAfterDays)
+                            "
                             :label="t('pantry.staleAfterDays')"
                             type="number"
                             min="1"

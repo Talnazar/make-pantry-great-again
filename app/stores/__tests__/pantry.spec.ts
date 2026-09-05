@@ -97,7 +97,7 @@ describe('Pantry store', () => {
     expect(store.pantryItemById('eggs')?.updatedAt).toMatch(
       /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
     )
-    expect(store.pantryItemById('eggs')?.staleAfterDays).toBe(7)
+    expect(store.pantryItemById('eggs')?.staleAfterDays).toBeNull()
     expect(syncSharedStateMock).toHaveBeenCalledOnce()
   })
 
@@ -165,7 +165,7 @@ describe('Pantry store', () => {
     await store.setStaleAfterDays('eggs', 0)
     await store.setStaleAfterDays('eggs', 1.5)
 
-    expect(store.pantryItemById('eggs')?.staleAfterDays).toBe(7)
+    expect(store.pantryItemById('eggs')?.staleAfterDays).toBeNull()
     expect(syncSharedStateMock).toHaveBeenCalledOnce()
   })
 
@@ -182,7 +182,7 @@ describe('Pantry store', () => {
     expect(store.pantryItemById('bananas')?.updatedAt).toMatch(
       /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
     )
-    expect(store.pantryItemById('bananas')?.staleAfterDays).toBe(7)
+    expect(store.pantryItemById('bananas')?.staleAfterDays).toBeNull()
   })
 
   it('keeps the timestamp unchanged when purchased flags are already complete', () => {
@@ -210,7 +210,15 @@ describe('Pantry store', () => {
     expect(store.pantryItemById('eggs')?.updatedAt).toMatch(
       /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
     )
-    expect(store.pantryItemById('eggs')?.staleAfterDays).toBe(7)
+    expect(store.pantryItemById('eggs')?.staleAfterDays).toBeNull()
+  })
+
+  it('migrates the legacy seven-day default to null', () => {
+    const store = usePantryStore()
+
+    store.hydrateItems([{ itemId: 'eggs', staleAfterDays: 7 }])
+
+    expect(store.pantryItemById('eggs')?.staleAfterDays).toBeNull()
   })
 
   it('exports only selected items marked as need to buy without changing Pantry state', async () => {

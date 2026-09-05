@@ -196,6 +196,8 @@ export const useListStore = defineStore('list', () => {
         pantryItems: pantryStore.pantryItems,
         categories: categoryStore.categories,
         currency: settingsStore.currency,
+        timeFormat: settingsStore.timeFormat,
+        defaultStaleAfterDays: settingsStore.defaultStaleAfterDays,
         loading: uiStore.loading,
         saving: uiStore.saving,
         title: uiStore.title,
@@ -225,6 +227,8 @@ export const useListStore = defineStore('list', () => {
       pantryItems: pantryStore.pantryItems,
       categories: categoryStore.categories,
       currency: settingsStore.currency,
+      timeFormat: settingsStore.timeFormat,
+      defaultStaleAfterDays: settingsStore.defaultStaleAfterDays,
     })
   }
 
@@ -245,6 +249,9 @@ export const useListStore = defineStore('list', () => {
       pantryStore.hydrateItems(data.pantryItems)
     }
     settingsStore.currency = data.currency ?? settingsStore.currency
+    settingsStore.timeFormat = data.timeFormat ?? settingsStore.timeFormat
+    settingsStore.defaultStaleAfterDays =
+      data.defaultStaleAfterDays ?? settingsStore.defaultStaleAfterDays
 
     if (opts.useNavDrawerFromData) {
       uiStore.navDrawerOpen = (data.navDrawerOpen ?? uiStore.navDrawerOpen) && !isMobile()
@@ -305,6 +312,8 @@ export const useListStore = defineStore('list', () => {
         items: itemStore.items,
         pantryItems: pantryStore.pantryItems,
         currency: settingsStore.currency,
+        timeFormat: settingsStore.timeFormat,
+        defaultStaleAfterDays: settingsStore.defaultStaleAfterDays,
         selectedListId: selectedListId.value,
       })
       return
@@ -332,6 +341,9 @@ export const useListStore = defineStore('list', () => {
         pantryStore.hydrateItems(state.pantryItems)
       }
       settingsStore.currency = state?.currency ?? settingsStore.currency
+      settingsStore.timeFormat = state?.timeFormat ?? settingsStore.timeFormat
+      settingsStore.defaultStaleAfterDays =
+        state?.defaultStaleAfterDays ?? settingsStore.defaultStaleAfterDays
       selectedListId.value = state?.selectedListId ?? selectedListId.value
       uiStore.navDrawerOpen = (state?.navDrawerOpen ?? uiStore.navDrawerOpen) && !isMobile()
 

@@ -21,6 +21,8 @@ export interface SelectItem {
   unit?: string | null
 }
 
+export type TimeFormat = '12-hour' | '24-hour'
+
 export interface Item {
   id: string
   name: string
@@ -112,6 +114,8 @@ export interface State {
   items: Array<Item>
   pantryItems: Array<PantryItem>
   currency: string
+  timeFormat: TimeFormat
+  defaultStaleAfterDays: number
   notification: Notification
   navDrawerOpen: boolean
 }

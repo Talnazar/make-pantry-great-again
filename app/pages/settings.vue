@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { mdiCheck } from '@mdi/js'
+import type { TimeFormat } from '~/types/state'
 
 const { t } = useI18n()
 const settingsStore = useSettingsStore()
@@ -25,18 +26,26 @@ definePageMeta({
 
 const formValid = ref(false)
 const formCurrency = ref(settingsStore.currency)
+const formTimeFormat = ref<TimeFormat>(settingsStore.timeFormat)
+const formDefaultStaleAfterDays = ref(settingsStore.defaultStaleAfterDays)
 
 onMounted(() => {
   uiStore.setTitle(t('settings.title'))
   formCurrency.value = settingsStore.currency
+  formTimeFormat.value = settingsStore.timeFormat
+  formDefaultStaleAfterDays.value = settingsStore.defaultStaleAfterDays
 })
 
 function clearForm() {
   formCurrency.value = settingsStore.currency
+  formTimeFormat.value = settingsStore.timeFormat
+  formDefaultStaleAfterDays.value = settingsStore.defaultStaleAfterDays
 }
 
 function onSave() {
   settingsStore.setCurrency(formCurrency.value)
+  settingsStore.setTimeFormat(formTimeFormat.value)
+  settingsStore.setDefaultStaleAfterDays(formDefaultStaleAfterDays.value)
   clearForm()
 }
 </script>
@@ -98,6 +107,28 @@ function onSave() {
                   </v-list-item>
                 </template>
               </v-select>
+              <v-select
+                v-model="formTimeFormat"
+                :disabled="uiStore.saving"
+                :items="[
+                  { title: $t('settings.timeFormat12Hour'), value: '12-hour' },
+                  { title: $t('settings.timeFormat24Hour'), value: '24-hour' },
+                ]"
+                density="compact"
+                color="primary"
+                variant="outlined"
+                :label="$t('settings.timeFormat')"
+              />
+              <v-text-field
+                v-model.number="formDefaultStaleAfterDays"
+                :disabled="uiStore.saving"
+                type="number"
+                min="1"
+                density="compact"
+                color="primary"
+                variant="outlined"
+                :label="$t('settings.defaultStaleAfterDays')"
+              />
             </v-form>
           </v-card-text>
           <v-card-actions class="mt-n5 pb-5 ml-2">

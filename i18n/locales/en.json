@@ -92,6 +92,10 @@
     "theme": "Theme",
     "darkMode": "Dark",
     "lightMode": "Light",
+    "timeFormat": "Time format",
+    "timeFormat12Hour": "12-hour (AM/PM)",
+    "timeFormat24Hour": "24-hour",
+    "defaultStaleAfterDays": "Default stale after days",
     "saveSettings": "Save Settings"
   },
   "common": {

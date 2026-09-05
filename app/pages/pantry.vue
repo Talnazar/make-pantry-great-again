@@ -38,7 +38,7 @@ const groupByCategory = ref(false)
 const searchQuery = ref('')
 const expandedCategoryIds = ref<string[]>([])
 const categoryStore = useCategoryStore()
-const defaultStaleAfterDays = 7
+const settingsStore = useSettingsStore()
 
 const availableItems = computed(() =>
   itemStore.items
@@ -118,18 +118,22 @@ function categoryClass(category: Category): string {
   return `text-${category.color || 'teal'}`
 }
 
-const dateFormatter = new Intl.DateTimeFormat(undefined, {
-  dateStyle: 'medium',
-  timeStyle: 'short',
-})
+const dateFormatter = computed(
+  () =>
+    new Intl.DateTimeFormat(undefined, {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+      hour12: settingsStore.timeFormat === '12-hour',
+    }),
+)
 
 function formatLastChecked(updatedAt: string): string {
   const date = new Date(updatedAt)
-  return Number.isNaN(date.getTime()) ? '' : dateFormatter.format(date)
+  return Number.isNaN(date.getTime()) ? '' : dateFormatter.value.format(date)
 }
 
 function effectiveStaleAfterDays(staleAfterDays: number | null): number {
-  return staleAfterDays ?? defaultStaleAfterDays
+  return staleAfterDays ?? settingsStore.defaultStaleAfterDays
 }
 
 function isStale(updatedAt: string, staleAfterDays: number | null): boolean {

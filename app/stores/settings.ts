@@ -1,7 +1,9 @@
-import type { AppData, SelectItem } from '~/types/state'
+import type { AppData, SelectItem, TimeFormat } from '~/types/state'
 
 export const useSettingsStore = defineStore('settings', () => {
   const currency = ref(DEFAULT_CURRENCY)
+  const timeFormat = ref<TimeFormat>('24-hour')
+  const defaultStaleAfterDays = ref(7)
 
   const currencySymbol = computed((): string => {
     const symbol =
@@ -65,17 +67,59 @@ export const useSettingsStore = defineStore('settings', () => {
     uiStore.setSaving(false)
   }
 
+  async function setTimeFormat(newTimeFormat: TimeFormat) {
+    if (newTimeFormat !== '12-hour' && newTimeFormat !== '24-hour') return
+
+    const uiStore = useUIStore()
+
+    uiStore.setSaving(true)
+    timeFormat.value = newTimeFormat
+
+    const listStore = useListStore()
+    listStore.persistToLocalStorage()
+
+    if (listStore.stateLoaded) {
+      await syncSharedState({ timeFormat: timeFormat.value })
+    }
+
+    uiStore.setSaving(false)
+  }
+
+  async function setDefaultStaleAfterDays(days: number) {
+    if (!Number.isInteger(days) || days < 1) return
+
+    const uiStore = useUIStore()
+
+    uiStore.setSaving(true)
+    defaultStaleAfterDays.value = days
+
+    const listStore = useListStore()
+    listStore.persistToLocalStorage()
+
+    if (listStore.stateLoaded) {
+      await syncSharedState({ defaultStaleAfterDays: defaultStaleAfterDays.value })
+    }
+
+    uiStore.setSaving(false)
+  }
+
   function resetSettings() {
     currency.value = DEFAULT_CURRENCY
+    timeFormat.value = '24-hour'
+    defaultStaleAfterDays.value = 7
   }
 
   return {
     currency,
+    timeFormat,
+    defaultStaleAfterDays,
     currencySymbol,
     formatCurrency,
     currencySelectItems,
     appData,
     setCurrency,
+    setTimeFormat,
+    setDefaultStaleAfterDays,
     resetSettings,
   }
 })

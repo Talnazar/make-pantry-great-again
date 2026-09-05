@@ -81,15 +81,33 @@ the Git hooks below are set up automatically.
 
 ### Available scripts
 
-| Command             | What it does                                 |
-| ------------------- | -------------------------------------------- |
-| `pnpm lint`         | Lint everything with ESLint                  |
-| `pnpm lint:fix`     | Lint and auto-fix what it can                |
-| `pnpm format`       | Format all files with Prettier               |
-| `pnpm format:check` | Check formatting without writing changes     |
-| `pnpm typecheck`    | Type-check the project with `nuxt typecheck` |
-| `pnpm test:unit`    | Run the unit tests once (Vitest)             |
-| `pnpm test:watch`   | Run the unit tests in watch mode             |
+| Command                   | What it does                                       |
+| ------------------------- | -------------------------------------------------- |
+| `pnpm firebase:emulators` | Start the local Firestore emulator and Emulator UI |
+| `pnpm lint`               | Lint everything with ESLint                        |
+| `pnpm lint:fix`           | Lint and auto-fix what it can                      |
+| `pnpm format`             | Format all files with Prettier                     |
+| `pnpm format:check`       | Check formatting without writing changes           |
+| `pnpm typecheck`          | Type-check the project with `nuxt typecheck`       |
+| `pnpm test:unit`          | Run the unit tests once (Vitest)                   |
+| `pnpm test:watch`         | Run the unit tests in watch mode                   |
+
+### Local Firestore emulator
+
+Local development can use a separate Firestore emulator instead of the shared
+Firebase project. Copy `.env.example` to `.env` once, then run these commands
+in separate terminals:
+
+```bash
+pnpm firebase:emulators
+pnpm dev
+```
+
+The app connects to Firestore at `127.0.0.1:8080`, and the Emulator UI is
+available at `http://127.0.0.1:4000`. Emulator data is temporary unless you
+start Firebase with an import/export directory. The local switch defaults to
+off when the environment variable is absent, so production continues to use
+Cloud Firestore.
 
 ### Git hooks (Husky + lint-staged)
 

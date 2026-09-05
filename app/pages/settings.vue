@@ -2,7 +2,7 @@
 import { mdiCheck } from '@mdi/js'
 import type { TimeFormat } from '~/types/state'
 
-const { t } = useI18n()
+const { t, locale, setLocale } = useI18n()
 const settingsStore = useSettingsStore()
 const uiStore = useUIStore()
 const theme = useVTheme()
@@ -13,6 +13,13 @@ function setTheme(newTheme: string) {
   theme.change(newTheme)
   if (import.meta.client) {
     localStorage.setItem('theme', newTheme)
+  }
+}
+
+async function setLanguage(newLocale: string) {
+  //Todo :  why with or, maybe later we will support more languages.
+  if (newLocale === 'en' || newLocale === 'he') {
+    await setLocale(newLocale)
   }
 }
 
@@ -57,6 +64,18 @@ function onSave() {
         <v-card class="mb-4">
           <v-card-title>{{ $t('settings.appearance') }}</v-card-title>
           <v-card-text>
+            <v-select
+              :model-value="locale"
+              :items="[
+                { title: 'English', value: 'en' },
+                { title: 'עברית', value: 'he' },
+              ]"
+              density="compact"
+              color="primary"
+              variant="outlined"
+              :label="$t('settings.language')"
+              @update:model-value="setLanguage"
+            />
             <v-select
               :model-value="isDark ? 'dark' : 'light'"
               :items="[

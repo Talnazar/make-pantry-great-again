@@ -82,6 +82,9 @@ export default defineNuxtConfig({
       },
     },
     vuetifyOptions: {
+      locale: {
+        rtl: { he: true },
+      },
       theme: {
         defaultTheme: 'dark',
         themes: {
@@ -115,7 +118,10 @@ export default defineNuxtConfig({
 
   i18n: {
     defaultLocale: 'en',
-    locales: [{ code: 'en', name: 'English', language: 'en-US', file: 'en.json' }],
+    locales: [
+      { code: 'en', name: 'English', language: 'en-US', dir: 'ltr', file: 'en.json' },
+      { code: 'he', name: 'עברית', language: 'he-IL', dir: 'rtl', file: 'he.json' },
+    ],
     strategy: 'prefix_except_default',
     detectBrowserLanguage: {
       useCookie: true,

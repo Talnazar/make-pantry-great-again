@@ -175,6 +175,7 @@ const theme = useVTheme()
 const isDark = computed(() => theme.global.current.value.dark)
 
 const listStore = useListStore()
+const appStateStore = useAppStateStore()
 const lists = computed(() => listStore.lists)
 
 const navDrawerOpen = computed({
@@ -194,6 +195,6 @@ onMounted(async () => {
   }
 
   // Load state so the nav drawer lists are populated
-  await listStore.loadState()
+  await appStateStore.loadState()
 })
 </script>

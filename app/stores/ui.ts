@@ -58,10 +58,10 @@ export const useUIStore = defineStore('ui', () => {
   async function setNavDrawer(isOpen: boolean, persistToFirestore = true) {
     navDrawerOpen.value = isOpen
 
-    const listStore = useListStore()
-    listStore.persistToLocalStorage()
+    const appStateStore = useAppStateStore()
+    appStateStore.persistToLocalStorage()
 
-    if (!persistToFirestore || !listStore.stateLoaded) return
+    if (!persistToFirestore || !appStateStore.stateLoaded) return
 
     await syncSharedState({ navDrawerOpen: navDrawerOpen.value })
   }

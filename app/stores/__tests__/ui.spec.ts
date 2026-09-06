@@ -7,7 +7,7 @@ const { syncSharedStateMock, persistToLocalStorageMock } = vi.hoisted(() => ({
   persistToLocalStorageMock: vi.fn(),
 }))
 
-const listStore = {
+const appStateStore = {
   stateLoaded: true,
   persistToLocalStorage: persistToLocalStorageMock,
 }
@@ -16,7 +16,7 @@ vi.stubGlobal('defineStore', defineStore)
 vi.stubGlobal('ref', ref)
 vi.stubGlobal('computed', computed)
 vi.stubGlobal('syncSharedState', syncSharedStateMock)
-vi.stubGlobal('useListStore', () => listStore)
+vi.stubGlobal('useAppStateStore', () => appStateStore)
 
 const { useUIStore } = await import('../ui')
 
@@ -25,7 +25,7 @@ describe('UI store nav drawer persistence', () => {
     setActivePinia(createPinia())
     syncSharedStateMock.mockReset()
     persistToLocalStorageMock.mockReset()
-    listStore.stateLoaded = true
+    appStateStore.stateLoaded = true
   })
 
   it('keeps mobile drawer changes local', async () => {
@@ -46,8 +46,8 @@ describe('UI store nav drawer persistence', () => {
     expect(syncSharedStateMock).toHaveBeenCalledWith({ navDrawerOpen: true })
   })
 
-  it('does not persist before list state is loaded', async () => {
-    listStore.stateLoaded = false
+  it('does not persist before app state is loaded', async () => {
+    appStateStore.stateLoaded = false
     const store = useUIStore()
 
     await store.setNavDrawer(true)

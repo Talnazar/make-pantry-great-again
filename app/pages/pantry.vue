@@ -12,7 +12,7 @@ import type { Category } from '~/types/state'
 import type { MaterializedPantryItem } from '~/stores/pantry'
 
 const { t } = useI18n()
-const listStore = useListStore()
+const appStateStore = useAppStateStore()
 const itemStore = useItemStore()
 const pantryStore = usePantryStore()
 const uiStore = useUIStore()
@@ -182,7 +182,7 @@ async function createShoppingList() {
 }
 
 onMounted(async () => {
-  await listStore.loadState()
+  await appStateStore.loadState()
   uiStore.setTitle(t('pantry.title'))
 })
 </script>
@@ -285,7 +285,7 @@ onMounted(async () => {
         </div>
 
         <v-progress-circular
-          v-if="!listStore.stateLoaded"
+          v-if="!appStateStore.stateLoaded"
           class="mx-auto d-block my-16"
           :size="100"
           :width="5"

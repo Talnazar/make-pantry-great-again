@@ -1,11 +1,6 @@
-import { onSnapshot, getDoc } from 'firebase/firestore'
-import type { Unsubscribe, DocumentData } from 'firebase/firestore'
 import { mdiDomain, mdiFormatListCheckbox, mdiWeightLifter } from '@mdi/js'
-import { DEFAULT_CATEGORY } from './category'
-import defaultCategoriesJson from '~/assets/categories.json'
 import type {
   Item,
-  Category,
   List,
   ListItem,
   MaterializedList,
@@ -14,8 +9,6 @@ import type {
   UpdateItemRequest,
   UpsertListRequest,
 } from '~/types/state'
-
-const COLLECTION_STATE = 'states'
 
 export const LIST_ICON_DEFAULT = 'list'
 const LIST_ICONS = new Map<string, string>([
@@ -32,34 +25,9 @@ const LIST_DEFAULT: List = {
   icon: LIST_ICON_DEFAULT,
 }
 
-const CATEGORY_COLORS = [
-  'red',
-  'pink',
-  'purple',
-  'deep-purple',
-  'indigo',
-  'blue',
-  'light-blue',
-  'cyan',
-  'green',
-  'light-green',
-  'lime',
-  'yellow',
-  'amber',
-  'orange',
-  'deep-orange',
-  'brown',
-  'blue-grey',
-  'teal',
-]
-
 export const useListStore = defineStore('list', () => {
   const lists = ref<List[]>([])
   const selectedListId = ref('')
-  const stateLoaded = ref(false)
-  const loadingState = ref(false)
-
-  let unsubscribeSnapshot: Unsubscribe | null = null
 
   // ─── Getters ───
 
@@ -175,219 +143,11 @@ export const useListStore = defineStore('list', () => {
     return selectedList.value.cartPanelOpen ? 0 : -1
   })
 
-  // ─── Persistence helpers ───
-
-  function persistToLocalStorage() {
-    if (!import.meta.client) return
-
-    try {
-      const itemStore = useItemStore()
-      const pantryStore = usePantryStore()
-      const categoryStore = useCategoryStore()
-      const uiStore = useUIStore()
-      const settingsStore = useSettingsStore()
-
-      const state = {
-        lists: lists.value,
-        selectedListId: selectedListId.value,
-        stateLoaded: stateLoaded.value,
-        loadingState: loadingState.value,
-        items: itemStore.items,
-        pantryItems: pantryStore.pantryItems,
-        categories: categoryStore.categories,
-        currency: settingsStore.currency,
-        timeFormat: settingsStore.timeFormat,
-        defaultStaleAfterDays: settingsStore.defaultStaleAfterDays,
-        loading: uiStore.loading,
-        saving: uiStore.saving,
-        title: uiStore.title,
-        notification: uiStore.notification,
-        navDrawerOpen: uiStore.navDrawerOpen,
-      }
-      localStorage.setItem(COLLECTION_STATE, JSON.stringify(state))
-    } catch {
-      // Ignore localStorage errors
-    }
-  }
-
-  async function saveState() {
-    persistToLocalStorage()
-
-    if (!stateLoaded.value) return
-
-    const itemStore = useItemStore()
-    const pantryStore = usePantryStore()
-    const categoryStore = useCategoryStore()
-    const settingsStore = useSettingsStore()
-
-    await syncSharedState({
-      lists: lists.value,
-      selectedListId: selectedListId.value,
-      items: itemStore.items,
-      pantryItems: pantryStore.pantryItems,
-      categories: categoryStore.categories,
-      currency: settingsStore.currency,
-      timeFormat: settingsStore.timeFormat,
-      defaultStaleAfterDays: settingsStore.defaultStaleAfterDays,
-    })
-  }
-
-  // ─── Hydration helpers ───
-
-  function _hydrateStores(data: DocumentData, opts: { useNavDrawerFromData?: boolean } = {}) {
-    const itemStore = useItemStore()
-    const pantryStore = usePantryStore()
-    const categoryStore = useCategoryStore()
-    const settingsStore = useSettingsStore()
-    const uiStore = useUIStore()
-
-    lists.value = data.lists ?? lists.value
-    selectedListId.value = data.selectedListId ?? selectedListId.value
-    categoryStore.categories = data.categories ?? [{ ...DEFAULT_CATEGORY }]
-    itemStore.items = data.items ?? itemStore.items
-    if (data.pantryItems !== undefined) {
-      pantryStore.hydrateItems(data.pantryItems)
-    }
-    settingsStore.currency = data.currency ?? settingsStore.currency
-    settingsStore.timeFormat = data.timeFormat ?? settingsStore.timeFormat
-    settingsStore.defaultStaleAfterDays =
-      data.defaultStaleAfterDays ?? settingsStore.defaultStaleAfterDays
-
-    if (opts.useNavDrawerFromData) {
-      uiStore.navDrawerOpen = (data.navDrawerOpen ?? uiStore.navDrawerOpen) && !isMobile()
-    }
-
-    persistToLocalStorage()
-  }
-
   // ─── Actions ───
-
-  async function loadState() {
-    if (stateLoaded.value) return
-
-    const settingsStore = useSettingsStore()
-
-    // Offline: fall back to the last state saved in localStorage
-    if (!window.navigator.onLine && localStorage.getItem(COLLECTION_STATE) != null) {
-      try {
-        const stored = JSON.parse(localStorage.getItem(COLLECTION_STATE) ?? '')
-        if (stored.items?.length > 0) {
-          loadStateFromStore()
-          return
-        }
-      } catch {
-        // Fall through to Firestore loading
-      }
-    }
-
-    const uiStore = useUIStore()
-
-    // Keep the app in sync with the shared document in real time
-    unsubscribeSnapshot = onSnapshot(sharedStateDoc(), async (snapshot) => {
-      if (!snapshot.data()) return
-      uiStore.setSaving(true)
-      _hydrateStores(snapshot.data()!)
-      uiStore.setSaving(false)
-    })
-
-    loadingState.value = true
-    persistToLocalStorage()
-
-    const stateSnapshot = await getDoc(sharedStateDoc())
-
-    if (!stateSnapshot.exists()) {
-      // First run: seed the shared document with defaults
-      settingsStore.currency = await getDefaultCurrency()
-      setDefaultItems()
-      sanitizeState()
-      loadingState.value = false
-      persistToLocalStorage()
-
-      const categoryStore = useCategoryStore()
-      const itemStore = useItemStore()
-      const pantryStore = usePantryStore()
-      await syncSharedState({
-        lists: lists.value,
-        categories: categoryStore.categories,
-        items: itemStore.items,
-        pantryItems: pantryStore.pantryItems,
-        currency: settingsStore.currency,
-        timeFormat: settingsStore.timeFormat,
-        defaultStaleAfterDays: settingsStore.defaultStaleAfterDays,
-        selectedListId: selectedListId.value,
-      })
-      return
-    }
-
-    _hydrateStores(stateSnapshot.data()!, { useNavDrawerFromData: true })
-    sanitizeState()
-    loadingState.value = false
-    persistToLocalStorage()
-  }
-
-  function loadStateFromStore() {
-    try {
-      const state = JSON.parse(localStorage.getItem(COLLECTION_STATE) ?? '')
-      const itemStore = useItemStore()
-      const pantryStore = usePantryStore()
-      const categoryStore = useCategoryStore()
-      const settingsStore = useSettingsStore()
-      const uiStore = useUIStore()
-
-      lists.value = state?.lists ?? lists.value
-      categoryStore.categories = state?.categories ?? [{ ...DEFAULT_CATEGORY }]
-      itemStore.items = state?.items ?? itemStore.items
-      if (state?.pantryItems !== undefined) {
-        pantryStore.hydrateItems(state.pantryItems)
-      }
-      settingsStore.currency = state?.currency ?? settingsStore.currency
-      settingsStore.timeFormat = state?.timeFormat ?? settingsStore.timeFormat
-      settingsStore.defaultStaleAfterDays =
-        state?.defaultStaleAfterDays ?? settingsStore.defaultStaleAfterDays
-      selectedListId.value = state?.selectedListId ?? selectedListId.value
-      uiStore.navDrawerOpen = (state?.navDrawerOpen ?? uiStore.navDrawerOpen) && !isMobile()
-
-      sanitizeState()
-    } catch {
-      // If localStorage parse fails, fall through
-    }
-  }
-
-  function setDefaultItems() {
-    const itemStore = useItemStore()
-    const categoryStore = useCategoryStore()
-
-    const newItems: Item[] = []
-    const newCategories: Category[] = [{ ...DEFAULT_CATEGORY }]
-
-    Object.entries(defaultCategoriesJson).forEach(([key, value], index) => {
-      const categoryId = key.trim().toLowerCase()
-      newCategories.push({
-        color: CATEGORY_COLORS[index] || 'teal',
-        id: categoryId,
-        name: key,
-      })
-
-      value.forEach((itemName: string) => {
-        newItems.push({
-          unit: null,
-          categoryId,
-          id: itemName.trim().toLowerCase(),
-          name: itemName
-            .split(' ')
-            .map((w) => w.slice(0, 1).toUpperCase() + w.slice(1).toLowerCase())
-            .join(' '),
-        })
-      })
-    })
-
-    categoryStore.categories = newCategories
-    itemStore.items = newItems
-    persistToLocalStorage()
-  }
 
   async function upsertList(request: UpsertListRequest) {
     const uiStore = useUIStore()
+    const appStateStore = useAppStateStore()
 
     uiStore.setSaving(true)
 
@@ -413,7 +173,7 @@ export const useListStore = defineStore('list', () => {
     }
     lists.value = [...lists.value]
 
-    persistToLocalStorage()
+    appStateStore.persistToLocalStorage()
 
     await syncSharedState({ lists: lists.value })
 
@@ -425,6 +185,8 @@ export const useListStore = defineStore('list', () => {
   }
 
   async function createListWithItems(request: UpsertListRequest, itemIds: string[]) {
+    const appStateStore = useAppStateStore()
+
     await upsertList(request)
 
     const list = listById(request.id)
@@ -439,7 +201,7 @@ export const useListStore = defineStore('list', () => {
       })),
     )
     lists.value = [...lists.value]
-    persistToLocalStorage()
+    appStateStore.persistToLocalStorage()
     await syncSharedState({ lists: lists.value })
 
     return list.id
@@ -479,10 +241,12 @@ export const useListStore = defineStore('list', () => {
   }
 
   async function setSelectedListId(listId: string) {
+    const appStateStore = useAppStateStore()
+
     if (listExists(listId)) {
       selectedListId.value = listId
     }
-    persistToLocalStorage()
+    appStateStore.persistToLocalStorage()
 
     await syncSharedState({ lists: lists.value, selectedListId: listId })
   }
@@ -498,6 +262,7 @@ export const useListStore = defineStore('list', () => {
   async function addItem(name: string) {
     const uiStore = useUIStore()
     const itemStore = useItemStore()
+    const appStateStore = useAppStateStore()
 
     uiStore.setSaving(true)
 
@@ -558,7 +323,7 @@ export const useListStore = defineStore('list', () => {
       _setAddedToCart(itemId, false)
     }
 
-    persistToLocalStorage()
+    appStateStore.persistToLocalStorage()
 
     const categoryStore = useCategoryStore()
     await syncSharedState({
@@ -578,6 +343,7 @@ export const useListStore = defineStore('list', () => {
     const uiStore = useUIStore()
     const itemStore = useItemStore()
     const categoryStore = useCategoryStore()
+    const appStateStore = useAppStateStore()
 
     uiStore.setSaving(true)
 
@@ -620,7 +386,7 @@ export const useListStore = defineStore('list', () => {
       lists.value = [...lists.value]
     }
 
-    persistToLocalStorage()
+    appStateStore.persistToLocalStorage()
 
     await syncSharedState({
       lists: lists.value,
@@ -633,6 +399,7 @@ export const useListStore = defineStore('list', () => {
   async function deleteListItem(itemId: string) {
     const uiStore = useUIStore()
     const itemStore = useItemStore()
+    const appStateStore = useAppStateStore()
 
     const listIndex = lists.value.findIndex((l) => l.id === selectedListId.value)
     if (listIndex !== -1) {
@@ -642,7 +409,7 @@ export const useListStore = defineStore('list', () => {
       lists.value = [...lists.value]
     }
 
-    persistToLocalStorage()
+    appStateStore.persistToLocalStorage()
 
     const item = itemStore.findItemById(itemId)
 
@@ -659,10 +426,11 @@ export const useListStore = defineStore('list', () => {
   async function addToCart(itemId: string) {
     const uiStore = useUIStore()
     const itemStore = useItemStore()
+    const appStateStore = useAppStateStore()
 
     uiStore.setSaving(true)
     _setAddedToCart(itemId, true)
-    persistToLocalStorage()
+    appStateStore.persistToLocalStorage()
 
     await syncSharedState({ lists: lists.value })
 
@@ -679,10 +447,11 @@ export const useListStore = defineStore('list', () => {
   async function removeFromCart(itemId: string) {
     const uiStore = useUIStore()
     const itemStore = useItemStore()
+    const appStateStore = useAppStateStore()
 
     uiStore.setSaving(true)
     _setAddedToCart(itemId, false)
-    persistToLocalStorage()
+    appStateStore.persistToLocalStorage()
 
     await syncSharedState({ lists: lists.value })
 
@@ -699,6 +468,7 @@ export const useListStore = defineStore('list', () => {
   async function finishAndClearCart(listId: string, missingItemIdsToAdd: string[] = []) {
     const uiStore = useUIStore()
     const pantryStore = usePantryStore()
+    const appStateStore = useAppStateStore()
     const cartItemIdsToFinish = cartItemIds(listId)
 
     const listIndex = lists.value.findIndex((l) => l.id === listId)
@@ -711,7 +481,7 @@ export const useListStore = defineStore('list', () => {
       lists.value = [...lists.value]
     }
 
-    persistToLocalStorage()
+    appStateStore.persistToLocalStorage()
 
     uiStore.setSaving(true)
     await syncSharedState({ lists: lists.value, pantryItems: pantryStore.pantryItems })
@@ -724,18 +494,23 @@ export const useListStore = defineStore('list', () => {
   }
 
   async function toggleCartPanel() {
+    const appStateStore = useAppStateStore()
     const listIndex = lists.value.findIndex((l) => l.id === selectedListId.value)
     if (listIndex !== -1) {
       lists.value[listIndex]!.cartPanelOpen = !lists.value[listIndex]!.cartPanelOpen
       lists.value = [...lists.value]
     }
 
-    persistToLocalStorage()
+    appStateStore.persistToLocalStorage()
 
     await syncSharedState({ lists: lists.value })
   }
 
+  // Repairs list data that may be missing or stale after hydration: guarantees a
+  // valid selected list and drops icon names the app no longer knows about.
   function sanitizeState() {
+    const appStateStore = useAppStateStore()
+
     // Create default list if selected list is invalid
     if (!selectedListIsValid.value) {
       if (lists.value.length > 0) {
@@ -754,32 +529,7 @@ export const useListStore = defineStore('list', () => {
       return list
     })
 
-    stateLoaded.value = true
-    persistToLocalStorage()
-  }
-
-  function resetState() {
-    if (unsubscribeSnapshot !== null) {
-      unsubscribeSnapshot()
-      unsubscribeSnapshot = null
-    }
-
-    const categoryStore = useCategoryStore()
-    const itemStore = useItemStore()
-    const pantryStore = usePantryStore()
-    const uiStore = useUIStore()
-
-    lists.value = []
-    selectedListId.value = ''
-    categoryStore.categories = [{ ...DEFAULT_CATEGORY }]
-    itemStore.items = []
-    pantryStore.pantryItems = []
-    stateLoaded.value = false
-    uiStore.navDrawerOpen = false
-
-    if (import.meta.client) {
-      localStorage.removeItem(COLLECTION_STATE)
-    }
+    appStateStore.persistToLocalStorage()
   }
 
   // ─── Private helpers ───
@@ -812,8 +562,6 @@ export const useListStore = defineStore('list', () => {
     // State
     lists,
     selectedListId,
-    stateLoaded,
-    loadingState,
     // Getters
     selectedList,
     selectedListIsValid,
@@ -829,9 +577,6 @@ export const useListStore = defineStore('list', () => {
     cartMaterializedItems,
     cartPanel,
     // Actions
-    loadState,
-    loadStateFromStore,
-    setDefaultItems,
     upsertList,
     createListWithItems,
     deleteList,
@@ -845,8 +590,5 @@ export const useListStore = defineStore('list', () => {
     finishAndClearCart,
     toggleCartPanel,
     sanitizeState,
-    saveState,
-    persistToLocalStorage,
-    resetState,
   }
 })

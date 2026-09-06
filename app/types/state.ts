@@ -104,7 +104,6 @@ export interface NotificationRequest {
 
 export interface State {
   loading: boolean
-  loadingState: boolean
   saving: boolean
   stateLoaded: boolean
   title: string

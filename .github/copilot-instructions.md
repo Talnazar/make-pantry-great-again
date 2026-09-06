@@ -55,7 +55,7 @@ There is no authentication. Every client reads and writes **one** Firestore docu
 1. **localStorage** (key `states`) — always available, enables offline use
 2. **Firestore** — the shared document, kept live via `onSnapshot()`
 
-`list.loadState()` opens the snapshot subscription and, if the document does not exist yet, seeds defaults from `app/assets/categories.json`. Offline, `loadStateFromStore()` rehydrates from localStorage instead.
+`appState.loadState()` opens the snapshot subscription and, if the document does not exist yet, seeds defaults from `app/assets/categories.json`. Offline, `appState.loadStateFromStore()` rehydrates from localStorage instead.
 
 Firestore writes go through `syncSharedState(partial)`, which is `setDoc(..., { merge: true })`. **Send only the keys you actually changed** — `syncSharedState({ pantryItems })`, not the whole state — so concurrent writers are not clobbered.
 
@@ -70,18 +70,19 @@ SSR is enabled globally. Route rules in `nuxt.config.ts` fine-tune behavior:
 
 ### State Management (Pinia)
 
-Six composition-API stores in `app/stores/`, all auto-imported:
+Seven composition-API stores in `app/stores/`, all auto-imported:
 
-| Store      | Purpose                                                        |
-| ---------- | -------------------------------------------------------------- |
-| `list`     | Shopping lists, list items, cart, Firestore load/sync, saving  |
-| `item`     | Master item registry with units and categories                 |
-| `category` | Item categories with colors; default is `uncategorized`        |
-| `pantry`   | Home stock: `haveAtHome`, `needToBuy`, staleness tracking      |
-| `settings` | Currency (auto-detected via ipapi.co), time format, stale days |
-| `ui`       | Loading/saving flags, notifications, page title, nav drawer    |
+| Store      | Purpose                                                              |
+| ---------- | -------------------------------------------------------------------- |
+| `appState` | Bootstrap and persistence: load/hydrate/seed, localStorage, snapshot |
+| `list`     | Shopping lists, list items, cart                                     |
+| `item`     | Master item registry with units and categories                       |
+| `category` | Item categories with colors; default is `uncategorized`              |
+| `pantry`   | Home stock: `haveAtHome`, `needToBuy`, staleness tracking            |
+| `settings` | Currency (auto-detected via ipapi.co), time format, stale days       |
+| `ui`       | Loading/saving flags, notifications, page title, nav drawer          |
 
-`list` is the hub. `list.persistToLocalStorage()` is the single localStorage write path and serializes state from _all_ stores, so every store calls into it after mutating. Cross-store calls are pervasive and circular (`item` → `list` → `pantry` → `list`), so always resolve stores inside functions (`const listStore = useListStore()`), never at module top level. `pantry.ts` carries a TODO about extracting persistence into a shared coordinator.
+`appState` is the persistence coordinator. `appState.persistToLocalStorage()` is the single localStorage write path and serializes state from _all_ the domain stores, so every store calls into it after mutating. It owns `loadState()` / `loadStateFromStore()` / `saveState()` / `resetState()` and the `stateLoaded` flag; the domain stores own only their own slice and call `syncSharedState()` with just the keys they changed. Cross-store calls are pervasive and circular (`appState` → every store, `item` → `list` → `pantry`), so always resolve stores inside functions (`const listStore = useListStore()`), never at module top level.
 
 ### Domain Model (`app/types/state.ts`)
 
@@ -173,5 +174,5 @@ Vuetify 4 uses MD3 design tokens. Key differences from Vuetify 2/3:
 ## Known Rough Edges
 
 - `LIST_DEFAULT` in `list.ts` computes its `id` once at module load via `crypto.randomUUID()`, and `selectedList` returns that shared constant object as its fallback.
-- `CATEGORY_COLORS` is defined twice — an array in `list.ts` and a `Set` in `category.ts`.
+- `CATEGORY_COLORS` lives only in `category.ts` (a `Set`); `appState.ts` imports it from there rather than keeping its own copy.
 - `CLAUDE.md` at the repository root covers the same ground for Claude Code. Update both when the architecture changes.

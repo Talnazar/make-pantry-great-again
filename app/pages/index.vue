@@ -6,6 +6,7 @@ definePageMeta({
 const { t } = useI18n()
 const localePath = useLocalePath()
 const listStore = useListStore()
+const appStateStore = useAppStateStore()
 
 useSeoDefaults({
   title: t('home.heroTitle'),
@@ -14,7 +15,7 @@ useSeoDefaults({
 })
 
 onMounted(async () => {
-  await listStore.loadState()
+  await appStateStore.loadState()
   const list = listStore.selectedList
   if (list) {
     navigateTo(localePath(`/lists/${list.id}`))

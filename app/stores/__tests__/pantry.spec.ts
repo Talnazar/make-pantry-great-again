@@ -32,7 +32,6 @@ const listStore = {
       quantity: number
     }>
   }>,
-  persistToLocalStorage: persistToLocalStorageMock,
   async createListWithItems(
     request: { id: string; name: string; icon: string },
     itemIds: string[],
@@ -54,6 +53,10 @@ const listStore = {
   },
 }
 
+const appStateStore = {
+  persistToLocalStorage: persistToLocalStorageMock,
+}
+
 const uiStore = {
   saving: false,
   setSaving(value: boolean) {
@@ -67,6 +70,7 @@ vi.stubGlobal('computed', computed)
 vi.stubGlobal('syncSharedState', syncSharedStateMock)
 vi.stubGlobal('useItemStore', () => itemStore)
 vi.stubGlobal('useListStore', () => listStore)
+vi.stubGlobal('useAppStateStore', () => appStateStore)
 vi.stubGlobal('useUIStore', () => uiStore)
 vi.stubGlobal('crypto', { randomUUID: () => 'pantry-list-id' })
 

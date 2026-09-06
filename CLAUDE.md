@@ -42,29 +42,32 @@ State is dual-persisted on every mutation:
 1. `localStorage` under key `states` — the offline path
 2. Firestore via `syncSharedState(partial)`, which is `setDoc(..., { merge: true })`
 
-`list.loadState()` opens an `onSnapshot` subscription so all clients stay live-synced. On first run
-(document missing) it seeds defaults from `app/assets/categories.json`. Offline, `loadStateFromStore()`
-rehydrates from localStorage instead.
+`appState.loadState()` opens an `onSnapshot` subscription so all clients stay live-synced. On first
+run (document missing) it seeds defaults from `app/assets/categories.json`. Offline,
+`appState.loadStateFromStore()` rehydrates from localStorage instead.
 
 Because writes are merges of partial objects, **only send the keys you actually changed** —
 `syncSharedState({ pantryItems })`, not the whole state — or you will clobber a concurrent writer.
 
 ### Stores (`app/stores/`, Pinia composition API, auto-imported)
 
-| Store      | Responsibility                                                     |
-| ---------- | ------------------------------------------------------------------ |
-| `list`     | Lists, list items, cart, Firestore load/sync/hydrate, localStorage |
-| `item`     | Master item catalog, units and pluralization                       |
-| `category` | Categories with colors; default is `uncategorized`                 |
-| `pantry`   | Home stock: `haveAtHome`, `needToBuy`, staleness                   |
-| `settings` | Currency, time format, default stale-after-days                    |
-| `ui`       | loading/saving flags, notifications, page title, nav drawer        |
+| Store      | Responsibility                                                       |
+| ---------- | -------------------------------------------------------------------- |
+| `appState` | Bootstrap and persistence: load/hydrate/seed, localStorage, snapshot |
+| `list`     | Lists, list items, cart                                              |
+| `item`     | Master item catalog, units and pluralization                         |
+| `category` | Categories with colors; default is `uncategorized`                   |
+| `pantry`   | Home stock: `haveAtHome`, `needToBuy`, staleness                     |
+| `settings` | Currency, time format, default stale-after-days                      |
+| `ui`       | loading/saving flags, notifications, page title, nav drawer          |
 
-`list` is the hub: `list.persistToLocalStorage()` is the single localStorage write path and
-serializes state from _all_ stores, so every store calls into it after mutating. Cross-store calls
-are pervasive and circular (`item` → `list` → `pantry` → `list`); resolve stores inside functions
-(`const listStore = useListStore()`), never at module top level. `pantry.ts` carries a TODO about
-extracting this into a shared persistence coordinator.
+`appState` is the persistence coordinator: `appState.persistToLocalStorage()` is the single
+localStorage write path and serializes state from _all_ the domain stores, so every store calls into
+it after mutating. It owns `loadState()` / `loadStateFromStore()` / `saveState()` / `resetState()`
+and the `stateLoaded` flag; the domain stores own only their own slice and call `syncSharedState()`
+with just the keys they changed. Cross-store calls are pervasive and circular (`appState` → every
+store, `item` → `list` → `pantry`); resolve stores inside functions
+(`const listStore = useListStore()`), never at module top level.
 
 ### Domain model (`app/types/state.ts`)
 
@@ -80,7 +83,7 @@ extracting this into a shared persistence coordinator.
 ### Rendering
 
 SSR is on globally. `routeRules` in `nuxt.config.ts`: `/` is prerendered; `/lists/**`, `/manage/**`
-and `/settings` are `ssr: false`. Pages call `await listStore.loadState()` in `onMounted`.
+and `/settings` are `ssr: false`. Pages call `await appStateStore.loadState()` in `onMounted`.
 
 Note `/pantry` is absent from `routeRules`, `sitemap.exclude` and `robots.disallow`, unlike its
 siblings — so it SSRs and is indexable. Add it to all three if you touch that area.
@@ -115,7 +118,7 @@ moving the existing ones is worth doing when you're already in that code.
 - `LIST_DEFAULT` in `list.ts` computes its `id` **once at module load** via `crypto.randomUUID()`,
   and `selectedList` returns that shared constant object as its fallback. Anything that mutates the
   fallback list mutates the module-level singleton.
-- `CATEGORY_COLORS` is defined twice — an array in `list.ts` and a `Set` in `category.ts`. Keep them
-  in sync or unify them if you touch either.
+- `CATEGORY_COLORS` lives only in `category.ts` (a `Set`); `appState.ts` imports it from there rather
+  than keeping its own copy. Keep it that way.
 - `.github/copilot-instructions.md` covers the same ground for GitHub Copilot. Update both when the
   architecture changes.

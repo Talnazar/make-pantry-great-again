@@ -4,7 +4,7 @@ import defaultCategoriesJson from '~/assets/categories.json'
 export const CATEGORY_ID_UNCATEGORIZED = 'uncategorized'
 export const CATEGORY_COLOR_TEAL = 'teal'
 
-const CATEGORY_COLORS = new Set<string>([
+export const CATEGORY_COLORS = new Set<string>([
   'red',
   'pink',
   'purple',
@@ -113,8 +113,8 @@ export const useCategoryStore = defineStore('category', () => {
       })
     }
 
-    const listStore = useListStore()
-    listStore.persistToLocalStorage()
+    const appStateStore = useAppStateStore()
+    appStateStore.persistToLocalStorage()
 
     await syncSharedState({ categories: categories.value, items: itemStore.items })
 
@@ -137,8 +137,8 @@ export const useCategoryStore = defineStore('category', () => {
       return item
     })
 
-    const listStore = useListStore()
-    listStore.persistToLocalStorage()
+    const appStateStore = useAppStateStore()
+    appStateStore.persistToLocalStorage()
 
     await syncSharedState({ categories: categories.value, items: itemStore.items })
 
@@ -163,8 +163,8 @@ export const useCategoryStore = defineStore('category', () => {
       }
     })
 
-    const listStore = useListStore()
-    listStore.persistToLocalStorage()
+    const appStateStore = useAppStateStore()
+    appStateStore.persistToLocalStorage()
 
     await syncSharedState({ categories: categories.value })
   }

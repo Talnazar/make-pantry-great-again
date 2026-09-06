@@ -15,6 +15,7 @@ const { t } = useI18n()
 const route = useRoute()
 const localePath = useLocalePath()
 const listStore = useListStore()
+const appStateStore = useAppStateStore()
 const itemStore = useItemStore()
 const pantryStore = usePantryStore()
 const categoryStore = useCategoryStore()
@@ -214,7 +215,7 @@ function onSave() {
 }
 
 onMounted(async () => {
-  await listStore.loadState()
+  await appStateStore.loadState()
   const listId = route.params.listId as string
 
   if (listStore.selectedList.id !== listId) {
@@ -269,7 +270,7 @@ onMounted(async () => {
 
     <!-- Loading spinner -->
     <v-progress-circular
-      v-if="!listStore.stateLoaded"
+      v-if="!appStateStore.stateLoaded"
       class="mx-auto d-block my-16"
       :size="100"
       :width="5"
@@ -282,7 +283,7 @@ onMounted(async () => {
       v-if="
         listStore.listMaterializedItems.length === 0 &&
         listStore.cartMaterializedItems.length === 0 &&
-        listStore.stateLoaded
+        appStateStore.stateLoaded
       "
     >
       <v-col cols="12" lg="6" md="8" offset-md="2" offset-lg="3">

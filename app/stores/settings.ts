@@ -53,10 +53,10 @@ export const useSettingsStore = defineStore('settings', () => {
     uiStore.setSaving(true)
     currency.value = newCurrency
 
-    const listStore = useListStore()
-    listStore.persistToLocalStorage()
+    const appStateStore = useAppStateStore()
+    appStateStore.persistToLocalStorage()
 
-    if (listStore.stateLoaded) {
+    if (appStateStore.stateLoaded) {
       await syncSharedState({ currency: currency.value })
     }
 
@@ -75,10 +75,10 @@ export const useSettingsStore = defineStore('settings', () => {
     uiStore.setSaving(true)
     timeFormat.value = newTimeFormat
 
-    const listStore = useListStore()
-    listStore.persistToLocalStorage()
+    const appStateStore = useAppStateStore()
+    appStateStore.persistToLocalStorage()
 
-    if (listStore.stateLoaded) {
+    if (appStateStore.stateLoaded) {
       await syncSharedState({ timeFormat: timeFormat.value })
     }
 
@@ -93,10 +93,10 @@ export const useSettingsStore = defineStore('settings', () => {
     uiStore.setSaving(true)
     defaultStaleAfterDays.value = days
 
-    const listStore = useListStore()
-    listStore.persistToLocalStorage()
+    const appStateStore = useAppStateStore()
+    appStateStore.persistToLocalStorage()
 
-    if (listStore.stateLoaded) {
+    if (appStateStore.stateLoaded) {
       await syncSharedState({ defaultStaleAfterDays: defaultStaleAfterDays.value })
     }
 

@@ -5,7 +5,7 @@ import type { Category, UpsertCategoryRequest } from '~/types/state'
 
 const { t } = useI18n()
 const categoryStore = useCategoryStore()
-const listStore = useListStore()
+const appStateStore = useAppStateStore()
 const uiStore = useUIStore()
 
 useHead({
@@ -38,7 +38,7 @@ const formTitle = computed(() =>
 )
 
 onMounted(() => {
-  listStore.loadState()
+  appStateStore.loadState()
   uiStore.setTitle(t('nav.manageCategories'))
 })
 

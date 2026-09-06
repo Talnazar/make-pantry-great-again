@@ -6,6 +6,7 @@ import type { List, UpsertListRequest } from '~/types/state'
 
 const { t } = useI18n()
 const listStore = useListStore()
+const appStateStore = useAppStateStore()
 const uiStore = useUIStore()
 
 useHead({
@@ -39,7 +40,7 @@ const formTitle = computed(() =>
 const prependIcon = computed(() => listStore.listIcon(editedList.value.icon))
 
 onMounted(() => {
-  listStore.loadState()
+  appStateStore.loadState()
   uiStore.setTitle(t('nav.manageLists'))
 })
 

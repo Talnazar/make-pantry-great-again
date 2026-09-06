@@ -117,5 +117,5 @@ moving the existing ones is worth doing when you're already in that code.
   fallback list mutates the module-level singleton.
 - `CATEGORY_COLORS` is defined twice — an array in `list.ts` and a `Set` in `category.ts`. Keep them
   in sync or unify them if you touch either.
-- `.github/copilot-instructions.md` predates the pantry store and Hebrew locale; it claims four stores
-  and English-only. This file is the current one — update both if you change the architecture.
+- `.github/copilot-instructions.md` covers the same ground for GitHub Copilot. Update both when the
+  architecture changes.

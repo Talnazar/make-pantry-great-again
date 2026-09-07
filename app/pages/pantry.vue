@@ -35,7 +35,7 @@ const needToBuyFilter = ref('all')
 const sortOption = ref('nameAsc')
 const groupByCategory = ref(false)
 const searchQuery = ref('')
-const addItemSearchQuery = ref('')
+const addItemSearchQuery = ref<string | null>('')
 const expandedCategoryIds = ref<string[]>([])
 const categoryStore = useCategoryStore()
 const settingsStore = useSettingsStore()
@@ -46,8 +46,10 @@ const availableItems = computed(() =>
     .sort((a, b) => a.name.localeCompare(b.name)),
 )
 
+const addItemSearchTerm = computed(() => (addItemSearchQuery.value ?? '').trim())
+
 const filteredAvailableItems = computed(() => {
-  const query = addItemSearchQuery.value.trim().toLowerCase()
+  const query = addItemSearchTerm.value.toLowerCase()
   return availableItems.value.filter(
     (item) => query === '' || item.name.toLowerCase().includes(query),
   )
@@ -212,7 +214,7 @@ onMounted(async () => {
             clearable
           />
           <v-list
-            v-if="addItemSearchQuery.trim() && filteredAvailableItems.length > 0"
+            v-if="addItemSearchTerm && filteredAvailableItems.length > 0"
             class="mt-2"
             lines="one"
           >
@@ -232,7 +234,7 @@ onMounted(async () => {
             </v-list-item>
           </v-list>
           <p
-            v-else-if="addItemSearchQuery.trim() && filteredAvailableItems.length === 0"
+            v-else-if="addItemSearchTerm && filteredAvailableItems.length === 0"
             class="text-medium-emphasis text-body-2 mt-2 mb-0"
           >
             {{ t('pantry.noCatalogItemsMatch') }}

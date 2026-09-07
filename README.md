@@ -123,6 +123,7 @@ hook in a pinch (use sparingly), add `--no-verify` to your `git commit`/`git pus
 `.github/workflows/ci.yml` runs on every push to `main` and on every pull request:
 it checks formatting, lints, type-checks, runs the tests, and builds the app.
 
-> `.github/workflows/deploy.yml` is the upstream Pantry deploy pipeline. It is
-> **manual-only** and not configured for this fork — see the notes at the top of
-> that file before enabling it.
+Deploys go to Firebase Hosting: `.github/workflows/firebase-hosting-merge.yml`
+publishes the live site on every push to `main`, and
+`.github/workflows/firebase-hosting-pull-request.yml` builds a preview channel for
+each pull request.

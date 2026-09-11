@@ -1,4 +1,5 @@
 import type { Item, PantryItem } from '~/types/state'
+import { ITEM_NAME_MAX_LENGTH } from './item'
 
 export interface MaterializedPantryItem {
   item: Item
@@ -51,6 +52,50 @@ export const usePantryStore = defineStore('pantry', () => {
     ]
 
     await persistAndSync()
+    uiStore.setSaving(false)
+  }
+
+  // Adds by name instead of by id, creating the catalog item first when the name
+  // is unknown — the same mechanism `list.addItem` uses.
+  async function addItemByName(name: string) {
+    const itemStore = useItemStore()
+    const uiStore = useUIStore()
+
+    const trimmedName = name.trim()
+    if (!trimmedName) return
+
+    if (trimmedName.length > ITEM_NAME_MAX_LENGTH) {
+      uiStore.addNotification({
+        type: 'error',
+        message: `You name must be maximum ${ITEM_NAME_MAX_LENGTH} characters`,
+      })
+      return
+    }
+
+    if (hasPantryItem(itemStore.nameToId(trimmedName))) return
+
+    uiStore.setSaving(true)
+    const itemId = itemStore.ensureItem(trimmedName)
+
+    pantryItems.value = [
+      ...pantryItems.value,
+      {
+        itemId,
+        haveAtHome: false,
+        needToBuy: false,
+        updatedAt: new Date().toISOString(),
+        staleAfterDays: null,
+      },
+    ]
+
+    const appStateStore = useAppStateStore()
+    appStateStore.persistToLocalStorage()
+    await syncSharedState({ items: itemStore.items, pantryItems: pantryItems.value })
+
+    uiStore.addNotification({
+      type: 'success',
+      message: `${trimmedName} has been added successfully`,
+    })
     uiStore.setSaving(false)
   }
 
@@ -245,6 +290,7 @@ export const usePantryStore = defineStore('pantry', () => {
     pantryItemById,
     hasPantryItem,
     addItem,
+    addItemByName,
     removeItem,
     setHaveAtHome,
     setNeedToBuy,

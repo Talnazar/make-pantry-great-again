@@ -9,6 +9,7 @@ import type {
   UpdateItemRequest,
   UpsertListRequest,
 } from '~/types/state'
+import { ITEM_NAME_MAX_LENGTH } from './item'
 
 export const LIST_ICON_DEFAULT = 'list'
 const LIST_ICONS = new Map<string, string>([
@@ -271,10 +272,10 @@ export const useListStore = defineStore('list', () => {
       return
     }
 
-    if (name.trim().length > 50) {
+    if (name.trim().length > ITEM_NAME_MAX_LENGTH) {
       uiStore.addNotification({
         type: 'error',
-        message: 'You name must be maximum 50 characters',
+        message: `You name must be maximum ${ITEM_NAME_MAX_LENGTH} characters`,
       })
       uiStore.setSaving(false)
       return
@@ -287,23 +288,7 @@ export const useListStore = defineStore('list', () => {
       name = name.split(' ').slice(1).join(' ')
     }
 
-    const itemId = itemStore.nameToId(name)
-
-    if (!itemStore.hasItem(name)) {
-      const item: Item = {
-        id: itemId,
-        name: name.trim(),
-        unit: null,
-        categoryId: itemStore.findCategoryIdByItemId(itemId),
-      }
-      const idx = itemStore.items.findIndex((i) => i.id === item.id)
-      if (idx === -1) {
-        itemStore.items.push(item)
-      } else {
-        itemStore.items[idx] = item
-      }
-      itemStore.items = [...itemStore.items]
-    }
+    const itemId = itemStore.ensureItem(name)
 
     if (!listHasItemId(itemId)) {
       const listItem: ListItem = {

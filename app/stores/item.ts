@@ -2,6 +2,8 @@ import type { Item, ListItem, SelectItem, UpsertItemRequest } from '~/types/stat
 import { CATEGORY_ID_UNCATEGORIZED, DEFAULT_CATEGORY } from './category'
 import defaultCategoriesJson from '~/assets/categories.json'
 
+export const ITEM_NAME_MAX_LENGTH = 50
+
 const ITEM_UNITS = new Set<string>([
   'g',
   'kg',
@@ -120,6 +122,26 @@ export const useItemStore = defineStore('item', () => {
 
   function isValidUnit(unit: string | null): boolean {
     return ITEM_UNITS.has(unit ?? '')
+  }
+
+  // Creates the catalog entry when the name is not known yet and returns its id.
+  // Callers own persistence: mutate here, then sync the keys they changed.
+  function ensureItem(name: string): string {
+    const itemId = nameToId(name)
+
+    if (!findItemById(itemId)) {
+      items.value = [
+        ...items.value,
+        {
+          id: itemId,
+          name: name.trim(),
+          unit: null,
+          categoryId: CATEGORY_ID_UNCATEGORIZED,
+        },
+      ]
+    }
+
+    return itemId
   }
 
   async function upsertItem(request: UpsertItemRequest) {
@@ -280,6 +302,7 @@ export const useItemStore = defineStore('item', () => {
     itemUnitName,
     itemUnitSelectItems,
     isValidUnit,
+    ensureItem,
     upsertItem,
     deleteItem,
     syncItems,

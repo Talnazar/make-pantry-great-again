@@ -51,8 +51,12 @@
   "pantry": {
     "title": "Pantry",
     "addItem": "Add Item",
-    "chooseCatalogItem": "Choose an item from the catalog",
+    "chooseCatalogItem": "Choose a catalog item or type a new one",
     "noCatalogItemsMatch": "No catalog items match your search",
+    "addNewItem": "Add as new item",
+    "newItemHint": "Not in the catalog yet — it will be added to your items",
+    "itemAlreadyInPantry": "{name} is already in your pantry",
+    "itemNameTooLong": "Item names must be at most {max} characters",
     "searchItems": "Search pantry items",
     "createShoppingList": "Create shopping list",
     "listName": "List name",

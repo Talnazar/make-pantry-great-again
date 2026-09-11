@@ -51,8 +51,12 @@
   "pantry": {
   "title": "מזווה",
   "addItem": "הוספת פריט",
-  "chooseCatalogItem": "בחירת פריט מהקטלוג",
+  "chooseCatalogItem": "בחירת פריט מהקטלוג או הקלדת פריט חדש",
   "noCatalogItemsMatch": "לא נמצאו פריטים מתאימים בקטלוג",
+  "addNewItem": "הוספה כפריט חדש",
+  "newItemHint": "הפריט עדיין לא בקטלוג — הוא יתווסף לפריטים שלך",
+  "itemAlreadyInPantry": "{name} נמצא כבר במזווה שלך",
+  "itemNameTooLong": "שם פריט יכול להכיל עד {max} תווים",
   "searchItems": "חיפוש פריטים במזווה",
   "createShoppingList": "יצירת רשימת קניות",
   "listName": "שם הרשימה",

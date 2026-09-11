@@ -82,11 +82,12 @@ store, `item` → `list` → `pantry`); resolve stores inside functions
 
 ### Rendering
 
-SSR is on globally. `routeRules` in `nuxt.config.ts`: `/` is prerendered; `/lists/**`, `/manage/**`
-and `/settings` are `ssr: false`. Pages call `await appStateStore.loadState()` in `onMounted`.
+SSR is on globally. `routeRules` in `nuxt.config.ts`: `/` is prerendered; `/lists/**`, `/manage/**`,
+`/settings` and `/pantry` are `ssr: false`. Pages call `await appStateStore.loadState()` in
+`onMounted`.
 
-Note `/pantry` is absent from `routeRules`, `sitemap.exclude` and `robots.disallow`, unlike its
-siblings — so it SSRs and is indexable. Add it to all three if you touch that area.
+The same CSR-only routes are listed in `sitemap.exclude` and `robots.disallow`. Keep any new app
+route in all three places.
 
 ## Conventions
 

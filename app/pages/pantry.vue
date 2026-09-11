@@ -10,6 +10,7 @@ import {
 } from '@mdi/js'
 import type { Category } from '~/types/state'
 import type { MaterializedPantryItem } from '~/stores/pantry'
+import { ITEM_NAME_MAX_LENGTH } from '~/stores/item'
 
 const { t } = useI18n()
 const appStateStore = useAppStateStore()
@@ -54,6 +55,24 @@ const filteredAvailableItems = computed(() => {
     (item) => query === '' || item.name.toLowerCase().includes(query),
   )
 })
+
+// A typed name that matches no catalog item can still be added: the pantry store
+// creates the catalog item on the way in.
+const newItemId = computed(() => itemStore.nameToId(addItemSearchTerm.value))
+
+const canAddNewItem = computed(
+  () =>
+    addItemSearchTerm.value !== '' &&
+    addItemSearchTerm.value.length <= ITEM_NAME_MAX_LENGTH &&
+    !itemStore.findItemById(newItemId.value) &&
+    !pantryStore.hasPantryItem(newItemId.value),
+)
+
+const newItemIsAlreadyInPantry = computed(
+  () => addItemSearchTerm.value !== '' && pantryStore.hasPantryItem(newItemId.value),
+)
+
+const newItemNameIsTooLong = computed(() => addItemSearchTerm.value.length > ITEM_NAME_MAX_LENGTH)
 
 const filterOptions = computed(() => [
   { title: t('pantry.filterAll'), value: 'all' },
@@ -169,6 +188,17 @@ async function addItem(itemId: string) {
   await pantryStore.addItem(itemId)
 }
 
+async function addNewItem() {
+  if (!canAddNewItem.value) return
+
+  const name = addItemSearchTerm.value
+  await pantryStore.addItemByName(name)
+
+  if (pantryStore.hasPantryItem(itemStore.nameToId(name))) {
+    addItemSearchQuery.value = ''
+  }
+}
+
 async function createShoppingList() {
   creatingList.value = true
   const listId = await pantryStore.createShoppingList(
@@ -212,11 +242,21 @@ onMounted(async () => {
             density="comfortable"
             hide-details
             clearable
+            @keyup.enter="addNewItem"
           />
+          <p v-if="newItemNameIsTooLong" class="text-error text-body-2 mt-2 mb-0">
+            {{ t('pantry.itemNameTooLong', { max: ITEM_NAME_MAX_LENGTH }) }}
+          </p>
+          <p
+            v-else-if="newItemIsAlreadyInPantry"
+            class="text-medium-emphasis text-body-2 mt-2 mb-0"
+          >
+            {{ t('pantry.itemAlreadyInPantry', { name: addItemSearchTerm }) }}
+          </p>
           <v-list
-            v-if="addItemSearchTerm && filteredAvailableItems.length > 0"
+            v-else-if="addItemSearchTerm && (filteredAvailableItems.length > 0 || canAddNewItem)"
             class="mt-2"
-            lines="one"
+            :lines="canAddNewItem ? 'two' : 'one'"
           >
             <v-list-item v-for="item in filteredAvailableItems" :key="item.id" :title="item.name">
               <template #append>
@@ -232,11 +272,26 @@ onMounted(async () => {
                 </v-btn>
               </template>
             </v-list-item>
+            <v-list-item
+              v-if="canAddNewItem"
+              :title="addItemSearchTerm"
+              :subtitle="t('pantry.newItemHint')"
+            >
+              <template #append>
+                <v-btn
+                  color="primary"
+                  variant="flat"
+                  size="small"
+                  :disabled="uiStore.saving"
+                  @click="addNewItem"
+                >
+                  <v-icon start :icon="mdiPlus" />
+                  {{ t('pantry.addNewItem') }}
+                </v-btn>
+              </template>
+            </v-list-item>
           </v-list>
-          <p
-            v-else-if="addItemSearchTerm && filteredAvailableItems.length === 0"
-            class="text-medium-emphasis text-body-2 mt-2 mb-0"
-          >
+          <p v-else-if="addItemSearchTerm" class="text-medium-emphasis text-body-2 mt-2 mb-0">
             {{ t('pantry.noCatalogItemsMatch') }}
           </p>
         </div>

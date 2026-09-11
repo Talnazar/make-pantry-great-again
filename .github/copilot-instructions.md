@@ -64,9 +64,9 @@ Firestore writes go through `syncSharedState(partial)`, which is `setDoc(..., { 
 SSR is enabled globally. Route rules in `nuxt.config.ts` fine-tune behavior:
 
 - **Prerendered:** `/`
-- **CSR only (`ssr: false`):** `/lists/**`, `/manage/**`, `/settings`
+- **CSR only (`ssr: false`):** `/lists/**`, `/manage/**`, `/settings`, `/pantry`
 
-`/pantry` is currently absent from `routeRules`, `sitemap.exclude`, and `robots.disallow`, unlike its siblings, so it renders on the server and is indexable. Add it to all three if you work in that area.
+The CSR-only routes are also listed in `sitemap.exclude` and `robots.disallow`. Keep any new app route in all three places.
 
 ### State Management (Pinia)
 

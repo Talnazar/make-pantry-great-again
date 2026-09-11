@@ -226,6 +226,7 @@ export default defineNuxtConfig({
     '/lists/**': { ssr: false },
     '/manage/**': { ssr: false },
     '/settings': { ssr: false },
+    '/pantry': { ssr: false },
   },
 
   site: {
@@ -236,11 +237,11 @@ export default defineNuxtConfig({
   },
 
   sitemap: {
-    exclude: ['/lists', '/lists/**', '/manage/**', '/settings'],
+    exclude: ['/lists', '/lists/**', '/manage/**', '/settings', '/pantry'],
   },
 
   robots: {
-    disallow: ['/lists', '/lists/**', '/manage/**', '/settings'],
+    disallow: ['/lists', '/lists/**', '/manage/**', '/settings', '/pantry'],
   },
 
   ogImage: {

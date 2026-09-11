@@ -2,20 +2,43 @@ import { createPinia, defineStore, setActivePinia } from 'pinia'
 import { computed, ref } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const { syncSharedStateMock, persistToLocalStorageMock } = vi.hoisted(() => ({
+const { syncSharedStateMock, persistToLocalStorageMock, addNotificationMock } = vi.hoisted(() => ({
   syncSharedStateMock: vi.fn(),
   persistToLocalStorageMock: vi.fn(),
+  addNotificationMock: vi.fn(),
 }))
 
+interface MockItem {
+  id: string
+  name: string
+  unit: string | null
+  categoryId: string
+}
+
+const CATALOG_ITEMS: MockItem[] = [
+  { id: 'eggs', name: 'Eggs', unit: null, categoryId: 'food' },
+  { id: 'rice', name: 'Rice', unit: null, categoryId: 'food' },
+  { id: 'milk', name: 'Milk', unit: null, categoryId: 'food' },
+  { id: 'bananas', name: 'Bananas', unit: null, categoryId: 'food' },
+]
+
 const itemStore = {
-  items: [
-    { id: 'eggs', name: 'Eggs', unit: null, categoryId: 'food' },
-    { id: 'rice', name: 'Rice', unit: null, categoryId: 'food' },
-    { id: 'milk', name: 'Milk', unit: null, categoryId: 'food' },
-    { id: 'bananas', name: 'Bananas', unit: null, categoryId: 'food' },
-  ],
+  items: [...CATALOG_ITEMS] as MockItem[],
   findItemById(itemId: string) {
     return this.items.find((item) => item.id === itemId)
+  },
+  nameToId(name: string) {
+    return name.trim().toLowerCase()
+  },
+  ensureItem(name: string) {
+    const itemId = this.nameToId(name)
+    if (!this.findItemById(itemId)) {
+      this.items = [
+        ...this.items,
+        { id: itemId, name: name.trim(), unit: null, categoryId: 'uncategorized' },
+      ]
+    }
+    return itemId
   },
 }
 
@@ -62,6 +85,7 @@ const uiStore = {
   setSaving(value: boolean) {
     this.saving = value
   },
+  addNotification: addNotificationMock,
 }
 
 vi.stubGlobal('defineStore', defineStore)
@@ -80,9 +104,11 @@ describe('Pantry store', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     listStore.lists = []
+    itemStore.items = [...CATALOG_ITEMS]
     uiStore.saving = false
     syncSharedStateMock.mockReset()
     persistToLocalStorageMock.mockReset()
+    addNotificationMock.mockReset()
   })
 
   it('adds valid catalog items and prevents duplicates', async () => {
@@ -103,6 +129,65 @@ describe('Pantry store', () => {
     )
     expect(store.pantryItemById('eggs')?.staleAfterDays).toBeNull()
     expect(syncSharedStateMock).toHaveBeenCalledOnce()
+  })
+
+  it('adds an unknown name to both the catalog and the pantry', async () => {
+    const store = usePantryStore()
+
+    await store.addItemByName('  Sourdough Bread ')
+
+    expect(itemStore.findItemById('sourdough bread')).toEqual({
+      id: 'sourdough bread',
+      name: 'Sourdough Bread',
+      unit: null,
+      categoryId: 'uncategorized',
+    })
+    expect(store.pantryItemById('sourdough bread')).toMatchObject({
+      itemId: 'sourdough bread',
+      haveAtHome: false,
+      needToBuy: false,
+      staleAfterDays: null,
+    })
+    expect(syncSharedStateMock).toHaveBeenCalledWith({
+      items: itemStore.items,
+      pantryItems: store.pantryItems,
+    })
+    expect(persistToLocalStorageMock).toHaveBeenCalledOnce()
+  })
+
+  it('reuses the existing catalog item when the name is already known', async () => {
+    const store = usePantryStore()
+
+    await store.addItemByName('eggs')
+
+    expect(itemStore.items).toHaveLength(CATALOG_ITEMS.length)
+    expect(store.pantryItemById('eggs')).toBeDefined()
+  })
+
+  it('ignores blank names and names already in the pantry', async () => {
+    const store = usePantryStore()
+    await store.addItemByName('Eggs')
+    syncSharedStateMock.mockReset()
+
+    await store.addItemByName('   ')
+    await store.addItemByName('eggs')
+
+    expect(store.pantryItems).toHaveLength(1)
+    expect(syncSharedStateMock).not.toHaveBeenCalled()
+  })
+
+  it('rejects names longer than the item name limit', async () => {
+    const store = usePantryStore()
+
+    await store.addItemByName('a'.repeat(51))
+
+    expect(store.pantryItems).toHaveLength(0)
+    expect(itemStore.items).toHaveLength(CATALOG_ITEMS.length)
+    expect(addNotificationMock).toHaveBeenCalledWith({
+      type: 'error',
+      message: 'You name must be maximum 50 characters',
+    })
+    expect(syncSharedStateMock).not.toHaveBeenCalled()
   })
 
   it('keeps have-at-home and need-to-buy flags independent', async () => {
